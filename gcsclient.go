@@ -152,20 +152,16 @@ func (client *gcsclient) URL(bucketName string, objectPath string, generation in
 		getCall = getCall.Generation(generation)
 	}
 
-	object, err := getCall.Do()
+	_, err := getCall.Do()
 	if err != nil {
 		return "", err
 	}
 
 	var url string
-	if object.MediaLink != "" {
-		url = object.MediaLink
+	if generation != 0 {
+		url = fmt.Sprintf("gs://%s/%s#%d", bucketName, objectPath, generation)
 	} else {
-		if generation != 0 {
-			url = fmt.Sprintf("gs://%s/%s#%d", bucketName, objectPath, generation)
-		} else {
-			url = fmt.Sprintf("gs://%s/%s", bucketName, objectPath)
-		}
+		url = fmt.Sprintf("gs://%s/%s", bucketName, objectPath)
 	}
 
 	return url, nil
