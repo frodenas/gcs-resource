@@ -61,6 +61,16 @@ type FakeGCSClient struct {
 		result1 string
 		result2 error
 	}
+	DeleteObjectStub        func(bucketName string, objectPath string, generation int64) error
+	deleteObjectMutex       sync.RWMutex
+	deleteObjectArgsForCall []struct {
+		bucketName string
+		objectPath string
+		generation int64
+	}
+	deleteObjectReturns struct {
+		result1 error
+	}
 }
 
 func (fake *FakeGCSClient) BucketObjects(bucketName string, prefix string) ([]string, error) {
@@ -234,6 +244,40 @@ func (fake *FakeGCSClient) URLReturns(result1 string, result2 error) {
 		result1 string
 		result2 error
 	}{result1, result2}
+}
+
+func (fake *FakeGCSClient) DeleteObject(bucketName string, objectPath string, generation int64) error {
+	fake.deleteObjectMutex.Lock()
+	fake.deleteObjectArgsForCall = append(fake.deleteObjectArgsForCall, struct {
+		bucketName string
+		objectPath string
+		generation int64
+	}{bucketName, objectPath, generation})
+	fake.deleteObjectMutex.Unlock()
+	if fake.DeleteObjectStub != nil {
+		return fake.DeleteObjectStub(bucketName, objectPath, generation)
+	} else {
+		return fake.deleteObjectReturns.result1
+	}
+}
+
+func (fake *FakeGCSClient) DeleteObjectCallCount() int {
+	fake.deleteObjectMutex.RLock()
+	defer fake.deleteObjectMutex.RUnlock()
+	return len(fake.deleteObjectArgsForCall)
+}
+
+func (fake *FakeGCSClient) DeleteObjectArgsForCall(i int) (string, string, int64) {
+	fake.deleteObjectMutex.RLock()
+	defer fake.deleteObjectMutex.RUnlock()
+	return fake.deleteObjectArgsForCall[i].bucketName, fake.deleteObjectArgsForCall[i].objectPath, fake.deleteObjectArgsForCall[i].generation
+}
+
+func (fake *FakeGCSClient) DeleteObjectReturns(result1 error) {
+	fake.DeleteObjectStub = nil
+	fake.deleteObjectReturns = struct {
+		result1 error
+	}{result1}
 }
 
 var _ gcsresource.GCSClient = new(FakeGCSClient)

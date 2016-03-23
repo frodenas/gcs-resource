@@ -19,6 +19,7 @@ type GCSClient interface {
 	DownloadFile(bucketName string, objectPath string, generation int64, localPath string) error
 	UploadFile(bucketName string, objectPath string, localPath string) (int64, error)
 	URL(bucketName string, objectPath string, generation int64) (string, error)
+	DeleteObject(bucketName string, objectPath string, generation int64) error
 }
 
 type gcsclient struct {
@@ -168,6 +169,20 @@ func (client *gcsclient) URL(bucketName string, objectPath string, generation in
 	}
 
 	return url, nil
+}
+
+func (client *gcsclient) DeleteObject(bucketName string, objectPath string, generation int64) error {
+	deleteCall := client.client.Objects.Delete(bucketName, objectPath)
+	if generation != 0 {
+		deleteCall = deleteCall.Generation(generation)
+	}
+
+	err := deleteCall.Do()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (client *gcsclient) getBucketObjects(bucketName string, prefix string) ([]string, error) {
