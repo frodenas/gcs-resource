@@ -38,7 +38,6 @@ var _ = Describe("Out Command", func() {
 			request = OutRequest{
 				Source: gcsresource.Source{
 					Project: "project",
-					JSONKey: "json key",
 					Bucket:  "bucket-name",
 				},
 				Params: Params{
@@ -75,18 +74,6 @@ var _ = Describe("Out Command", func() {
 					_, err := command.Run(sourceDir, request)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("please specify the project"))
-				})
-			})
-
-			Context("when the json_key is not set", func() {
-				BeforeEach(func() {
-					request.Source.JSONKey = ""
-				})
-
-				It("returns an error", func() {
-					_, err := command.Run(sourceDir, request)
-					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(ContainSubstring("please specify the json_key"))
 				})
 			})
 

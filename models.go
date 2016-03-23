@@ -13,10 +13,6 @@ func (source Source) IsValid() (bool, string) {
 		return false, "please specify the project"
 	}
 
-	if source.JSONKey == "" {
-		return false, "please specify the json_key"
-	}
-
 	if source.Bucket == "" {
 		return false, "please specify the bucket"
 	}
