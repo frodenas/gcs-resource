@@ -1,7 +1,6 @@
 package gcsresource
 
 type Source struct {
-	Project       string `json:"project"`
 	JSONKey       string `json:"json_key"`
 	Bucket        string `json:"bucket"`
 	Regexp        string `json:"regexp"`
@@ -9,10 +8,6 @@ type Source struct {
 }
 
 func (source Source) IsValid() (bool, string) {
-	if source.Project == "" {
-		return false, "please specify the project"
-	}
-
 	if source.Bucket == "" {
 		return false, "please specify the bucket"
 	}

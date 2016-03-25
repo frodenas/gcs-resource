@@ -17,7 +17,6 @@ func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
 }
 
-var project = os.Getenv("GCS_TESTING_PROJECT")
 var jsonKey = os.Getenv("GCS_TESTING_JSON_KEY")
 var bucketName = os.Getenv("GCS_TESTING_BUCKET")
 var versionedBucketName = os.Getenv("GCS_VERSIONED_TESTING_BUCKET")
@@ -58,13 +57,11 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	inPath = sd.InPath
 	outPath = sd.OutPath
 
-	Expect(project).ToNot(BeEmpty(), "must specify $GCS_TESTING_PROJECT")
 	Expect(bucketName).ToNot(BeEmpty(), "must specify $GCS_TESTING_BUCKET")
 	Expect(versionedBucketName).ToNot(BeEmpty(), "must specify $GCS_VERSIONED_TESTING_BUCKET")
 
 	gcsClient, err = gcsresource.NewGCSClient(
 		ioutil.Discard,
-		project,
 		jsonKey,
 	)
 	Expect(err).ToNot(HaveOccurred())

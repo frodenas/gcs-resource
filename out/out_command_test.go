@@ -37,8 +37,7 @@ var _ = Describe("Out Command", func() {
 
 			request = OutRequest{
 				Source: gcsresource.Source{
-					Project: "project",
-					Bucket:  "bucket-name",
+					Bucket: "bucket-name",
 				},
 				Params: Params{
 					File: "files/file*.tgz",
@@ -65,18 +64,6 @@ var _ = Describe("Out Command", func() {
 		}
 
 		Describe("when the request is invalid", func() {
-			Context("when the project is not set", func() {
-				BeforeEach(func() {
-					request.Source.Project = ""
-				})
-
-				It("returns an error", func() {
-					_, err := command.Run(sourceDir, request)
-					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(ContainSubstring("please specify the project"))
-				})
-			})
-
 			Context("when the bucket is not set", func() {
 				BeforeEach(func() {
 					request.Source.Bucket = ""

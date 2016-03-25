@@ -35,8 +35,7 @@ var _ = Describe("In Command", func() {
 
 			request = InRequest{
 				Source: gcsresource.Source{
-					Project: "project",
-					Bucket:  "bucket-name",
+					Bucket: "bucket-name",
 				},
 			}
 
@@ -50,18 +49,6 @@ var _ = Describe("In Command", func() {
 		})
 
 		Describe("when the request is invalid", func() {
-			Context("when the project is not set", func() {
-				BeforeEach(func() {
-					request.Source.Project = ""
-				})
-
-				It("returns an error", func() {
-					_, err := command.Run(destDir, request)
-					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(ContainSubstring("please specify the project"))
-				})
-			})
-
 			Context("when the bucket is not set", func() {
 				BeforeEach(func() {
 					request.Source.Bucket = ""

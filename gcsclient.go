@@ -29,7 +29,6 @@ type gcsclient struct {
 
 func NewGCSClient(
 	progressOutput io.Writer,
-	project string,
 	jsonKey string,
 ) (GCSClient, error) {
 	var err error

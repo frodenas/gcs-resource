@@ -21,7 +21,6 @@ func main() {
 
 	gcsClient, err := gcsresource.NewGCSClient(
 		os.Stderr,
-		request.Source.Project,
 		request.Source.JSONKey,
 	)
 	if err != nil {
