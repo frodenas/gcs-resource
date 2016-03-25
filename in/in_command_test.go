@@ -128,7 +128,7 @@ var _ = Describe("In Command", func() {
 
 				It("scans the bucket for the latest file to download", func() {
 					_, err := command.Run(destDir, request)
-					Expect(err).ShouldNot(HaveOccurred())
+					Expect(err).ToNot(HaveOccurred())
 
 					Expect(gcsClient.DownloadFileCallCount()).To(Equal(1))
 					bucketName, objectPath, generation, localPath := gcsClient.DownloadFileArgsForCall(0)
@@ -231,7 +231,7 @@ var _ = Describe("In Command", func() {
 					_, err := command.Run(destDir, request)
 					Expect(err).ToNot(HaveOccurred())
 
-					Expect(gcsClient.DownloadFileCallCount()).Should(Equal(1))
+					Expect(gcsClient.DownloadFileCallCount()).To(Equal(1))
 					bucketName, objectPath, generation, localPath := gcsClient.DownloadFileArgsForCall(0)
 
 					Expect(bucketName).To(Equal("bucket-name"))
@@ -336,7 +336,7 @@ var _ = Describe("In Command", func() {
 
 			It("downloads the versioned file", func() {
 				_, err := command.Run(destDir, request)
-				Expect(err).ShouldNot(HaveOccurred())
+				Expect(err).ToNot(HaveOccurred())
 
 				Expect(gcsClient.DownloadFileCallCount()).To(Equal(1))
 				bucketName, objectPath, generation, localPath := gcsClient.DownloadFileArgsForCall(0)
