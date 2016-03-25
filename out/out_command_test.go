@@ -97,12 +97,12 @@ var _ = Describe("Out Command", func() {
 				It("returns an error", func() {
 					_, err := command.Run(sourceDir, request)
 					Expect(err).To(HaveOccurred())
-					Expect(err.Error()).To(ContainSubstring("please specify file"))
+					Expect(err.Error()).To(ContainSubstring("please specify the file"))
 				})
 			})
 		})
 
-		Describe("finding local file to upload", func() {
+		Describe("finding the local file to upload", func() {
 			It("does not error if there is a single match", func() {
 				createFile("files/file.tgz")
 				createFile("files/test.tgz")

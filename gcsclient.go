@@ -133,6 +133,11 @@ func (client *gcsclient) UploadFile(bucketName string, objectPath string, localP
 	progress.Start()
 	defer progress.Finish()
 
+	isBucketVersioned, err := client.getBucketVersioning(bucketName)
+	if err != nil {
+		return 0, err
+	}
+
 	object := &storage.Object{
 		Name: objectPath,
 	}
@@ -142,7 +147,11 @@ func (client *gcsclient) UploadFile(bucketName string, objectPath string, localP
 		return 0, err
 	}
 
-	return uploadedObject.Generation, nil
+	if isBucketVersioned {
+		return uploadedObject.Generation, nil
+	}
+
+	return 0, nil
 }
 
 func (client *gcsclient) URL(bucketName string, objectPath string, generation int64) (string, error) {

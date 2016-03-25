@@ -15,7 +15,7 @@ type Params struct {
 
 func (params Params) IsValid() (bool, string) {
 	if params.File == "" {
-		return false, "please specify file"
+		return false, "please specify the file"
 	}
 
 	return true, ""
