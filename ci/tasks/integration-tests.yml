@@ -1,0 +1,19 @@
+---
+platform: linux
+
+image_resource:
+  type: docker-image
+  source:
+    repository: concourse/static-golang
+
+inputs:
+  - name: gcs-resource-src
+    path: go/src/github.com/frodenas/gcs-resource
+
+run:
+  path: go/src/github.com/frodenas/gcs-resource/ci/tasks/integration-tests.sh
+
+params:
+  GCS_TESTING_JSON_KEY:
+  GCS_TESTING_BUCKET:
+  GCS_VERSIONED_TESTING_BUCKET:
