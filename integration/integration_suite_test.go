@@ -17,9 +17,9 @@ func TestIntegration(t *testing.T) {
 	RegisterFailHandler(Fail)
 }
 
-var jsonKey = os.Getenv("GCS_TESTING_JSON_KEY")
-var bucketName = os.Getenv("GCS_TESTING_BUCKET")
-var versionedBucketName = os.Getenv("GCS_VERSIONED_TESTING_BUCKET")
+var jsonKey = os.Getenv("GCS_RESOURCE_JSON_KEY")
+var bucketName = os.Getenv("GCS_RESOURCE_BUCKET_NAME")
+var versionedBucketName = os.Getenv("GCS_RESOURCE_VERSIONED_BUCKET_NAME")
 var gcsClient gcsresource.GCSClient
 
 var checkPath string

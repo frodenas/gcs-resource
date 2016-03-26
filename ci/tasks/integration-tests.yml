@@ -14,6 +14,6 @@ run:
   path: go/src/github.com/frodenas/gcs-resource/ci/tasks/integration-tests.sh
 
 params:
-  GCS_TESTING_JSON_KEY:
-  GCS_TESTING_BUCKET:
-  GCS_VERSIONED_TESTING_BUCKET:
+  GCS_RESOURCE_JSON_KEY:
+  GCS_RESOURCE_BUCKET_NAME:
+  GCS_RESOURCE_VERSIONED_BUCKET_NAME:
