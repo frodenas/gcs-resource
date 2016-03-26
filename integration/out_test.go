@@ -62,7 +62,8 @@ var _ = Describe("out", func() {
 		BeforeEach(func() {
 			outRequest = out.OutRequest{
 				Source: gcsresource.Source{
-					Bucket: bucketName,
+					JSONKey: jsonKey,
+					Bucket:  bucketName,
 				},
 				Params: out.Params{
 					File: "files/file*.tgz",
@@ -121,7 +122,8 @@ var _ = Describe("out", func() {
 		BeforeEach(func() {
 			outRequest = out.OutRequest{
 				Source: gcsresource.Source{
-					Bucket: bucketName,
+					JSONKey: jsonKey,
+					Bucket:  bucketName,
 				},
 			}
 
@@ -181,8 +183,9 @@ var _ = Describe("out", func() {
 			BeforeEach(func() {
 				outRequest = out.OutRequest{
 					Source: gcsresource.Source{
-						Bucket: bucketName,
-						Regexp: filepath.Join(directoryPrefix, "file-to-*"),
+						JSONKey: jsonKey,
+						Bucket:  bucketName,
+						Regexp:  filepath.Join(directoryPrefix, "file-to-*"),
 					},
 					Params: out.Params{
 						File: "file-to-*",
@@ -232,8 +235,9 @@ var _ = Describe("out", func() {
 			BeforeEach(func() {
 				outRequest = out.OutRequest{
 					Source: gcsresource.Source{
-						Bucket: versionedBucketName,
-						Regexp: filepath.Join(directoryPrefix, "file-to-*"),
+						JSONKey: jsonKey,
+						Bucket:  versionedBucketName,
+						Regexp:  filepath.Join(directoryPrefix, "file-to-*"),
 					},
 					Params: out.Params{
 						File: "file-to-*",
@@ -287,8 +291,9 @@ var _ = Describe("out", func() {
 			BeforeEach(func() {
 				outRequest = out.OutRequest{
 					Source: gcsresource.Source{
-						Bucket: directoryPrefix,
-						Regexp: filepath.Join(directoryPrefix, "file-to-*"),
+						JSONKey: jsonKey,
+						Bucket:  directoryPrefix,
+						Regexp:  filepath.Join(directoryPrefix, "file-to-*"),
 					},
 					Params: out.Params{
 						File: "file-to-*",
@@ -327,6 +332,7 @@ var _ = Describe("out", func() {
 			BeforeEach(func() {
 				outRequest = out.OutRequest{
 					Source: gcsresource.Source{
+						JSONKey:       jsonKey,
 						Bucket:        bucketName,
 						VersionedFile: filepath.Join(directoryPrefix, "version"),
 					},
@@ -378,6 +384,7 @@ var _ = Describe("out", func() {
 			BeforeEach(func() {
 				outRequest = out.OutRequest{
 					Source: gcsresource.Source{
+						JSONKey:       jsonKey,
 						Bucket:        versionedBucketName,
 						VersionedFile: filepath.Join(directoryPrefix, "version"),
 					},
@@ -433,6 +440,7 @@ var _ = Describe("out", func() {
 			BeforeEach(func() {
 				outRequest = out.OutRequest{
 					Source: gcsresource.Source{
+						JSONKey:       jsonKey,
 						Bucket:        directoryPrefix,
 						VersionedFile: filepath.Join(directoryPrefix, "version"),
 					},

@@ -63,7 +63,8 @@ var _ = Describe("in", func() {
 		BeforeEach(func() {
 			inRequest = in.InRequest{
 				Source: gcsresource.Source{
-					Bucket: bucketName,
+					JSONKey: jsonKey,
+					Bucket:  bucketName,
 				},
 			}
 
@@ -149,8 +150,9 @@ var _ = Describe("in", func() {
 				BeforeEach(func() {
 					inRequest = in.InRequest{
 						Source: gcsresource.Source{
-							Bucket: bucketName,
-							Regexp: filepath.Join(directoryPrefix, "file-to-download-(.*)"),
+							JSONKey: jsonKey,
+							Bucket:  bucketName,
+							Regexp:  filepath.Join(directoryPrefix, "file-to-download-(.*)"),
 						},
 						Version: gcsresource.Version{
 							Path: filepath.Join(directoryPrefix, "file-to-download-1"),
@@ -206,8 +208,9 @@ var _ = Describe("in", func() {
 				BeforeEach(func() {
 					inRequest = in.InRequest{
 						Source: gcsresource.Source{
-							Bucket: bucketName,
-							Regexp: filepath.Join(directoryPrefix, "file-to-download-(.*)"),
+							JSONKey: jsonKey,
+							Bucket:  bucketName,
+							Regexp:  filepath.Join(directoryPrefix, "file-to-download-(.*)"),
 						},
 						Version: gcsresource.Version{
 							Path: filepath.Join(directoryPrefix, "file-to-download-missing"),
@@ -231,8 +234,9 @@ var _ = Describe("in", func() {
 				BeforeEach(func() {
 					inRequest = in.InRequest{
 						Source: gcsresource.Source{
-							Bucket: bucketName,
-							Regexp: filepath.Join(directoryPrefix, "file-to-download-(.*)"),
+							JSONKey: jsonKey,
+							Bucket:  bucketName,
+							Regexp:  filepath.Join(directoryPrefix, "file-to-download-(.*)"),
 						},
 					}
 
@@ -286,8 +290,9 @@ var _ = Describe("in", func() {
 				BeforeEach(func() {
 					inRequest = in.InRequest{
 						Source: gcsresource.Source{
-							Bucket: bucketName,
-							Regexp: filepath.Join(directoryPrefix, "file-to-upload-(.*)"),
+							JSONKey: jsonKey,
+							Bucket:  bucketName,
+							Regexp:  filepath.Join(directoryPrefix, "file-to-upload-(.*)"),
 						},
 					}
 
@@ -347,6 +352,7 @@ var _ = Describe("in", func() {
 
 					inRequest = in.InRequest{
 						Source: gcsresource.Source{
+							JSONKey:       jsonKey,
 							Bucket:        versionedBucketName,
 							VersionedFile: filepath.Join(directoryPrefix, "version"),
 						},
@@ -413,6 +419,7 @@ var _ = Describe("in", func() {
 				BeforeEach(func() {
 					inRequest = in.InRequest{
 						Source: gcsresource.Source{
+							JSONKey:       jsonKey,
 							Bucket:        versionedBucketName,
 							VersionedFile: filepath.Join(directoryPrefix, "missing"),
 						},
@@ -438,6 +445,7 @@ var _ = Describe("in", func() {
 				BeforeEach(func() {
 					inRequest = in.InRequest{
 						Source: gcsresource.Source{
+							JSONKey:       jsonKey,
 							Bucket:        bucketName,
 							VersionedFile: filepath.Join(directoryPrefix, "version"),
 						},
@@ -461,6 +469,7 @@ var _ = Describe("in", func() {
 				BeforeEach(func() {
 					inRequest = in.InRequest{
 						Source: gcsresource.Source{
+							JSONKey:       jsonKey,
 							Bucket:        bucketName,
 							VersionedFile: filepath.Join(directoryPrefix, "missing"),
 						},
