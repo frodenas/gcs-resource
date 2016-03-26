@@ -88,6 +88,15 @@ func (client *gcsclient) ObjectGenerations(bucketName string, objectPath string)
 }
 
 func (client *gcsclient) DownloadFile(bucketName string, objectPath string, generation int64, localPath string) error {
+	isBucketVersioned, err := client.getBucketVersioning(bucketName)
+	if err != nil {
+		return err
+	}
+
+	if !isBucketVersioned && generation != 0 {
+		return errors.New("bucket is not versioned")
+	}
+
 	getCall := client.client.Objects.Get(bucketName, objectPath)
 	if generation != 0 {
 		getCall = getCall.Generation(generation)
@@ -108,16 +117,24 @@ func (client *gcsclient) DownloadFile(bucketName string, objectPath string, gene
 	progress.Start()
 	defer progress.Finish()
 
-	// TODO
-	_, err = getCall.Download()
+	response, err := getCall.Download()
 	if err != nil {
 		return err
 	}
+	defer response.Body.Close()
+
+	reader := progress.NewProxyReader(response.Body)
+	io.Copy(localFile, reader)
 
 	return nil
 }
 
 func (client *gcsclient) UploadFile(bucketName string, objectPath string, localPath string) (int64, error) {
+	isBucketVersioned, err := client.getBucketVersioning(bucketName)
+	if err != nil {
+		return 0, err
+	}
+
 	stat, err := os.Stat(localPath)
 	if err != nil {
 		return 0, err
@@ -132,11 +149,6 @@ func (client *gcsclient) UploadFile(bucketName string, objectPath string, localP
 	progress := client.newProgressBar(stat.Size())
 	progress.Start()
 	defer progress.Finish()
-
-	isBucketVersioned, err := client.getBucketVersioning(bucketName)
-	if err != nil {
-		return 0, err
-	}
 
 	object := &storage.Object{
 		Name: objectPath,

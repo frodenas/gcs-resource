@@ -50,16 +50,16 @@ func (command *InCommand) inByRegex(destinationDir string, request InRequest) (I
 		return InResponse{}, err
 	}
 
+	if err := command.downloadFile(bucketName, objectPath, 0, destinationDir); err != nil {
+		return InResponse{}, err
+	}
+
 	version, ok := versions.Extract(objectPath, request.Source.Regexp)
 	if ok {
 		err := command.writeVersionFile(version.VersionNumber, destinationDir)
 		if err != nil {
 			return InResponse{}, err
 		}
-	}
-
-	if err := command.downloadFile(bucketName, objectPath, 0, destinationDir); err != nil {
-		return InResponse{}, err
 	}
 
 	url, err := command.gcsClient.URL(bucketName, objectPath, 0)

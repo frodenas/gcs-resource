@@ -328,7 +328,7 @@ var _ = Describe("out", func() {
 				outRequest = out.OutRequest{
 					Source: gcsresource.Source{
 						Bucket:        bucketName,
-						VersionedFile: "files/version",
+						VersionedFile: filepath.Join(directoryPrefix, "version"),
 					},
 					Params: out.Params{
 						File: "file-to-*",
@@ -340,12 +340,12 @@ var _ = Describe("out", func() {
 			})
 
 			AfterEach(func() {
-				err := gcsClient.DeleteObject(bucketName, "files/version", int64(0))
+				err := gcsClient.DeleteObject(bucketName, filepath.Join(directoryPrefix, "version"), int64(0))
 				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("uploads the file and outputs the response", func() {
-				generations, err := gcsClient.ObjectGenerations(versionedBucketName, "files/version")
+				generations, err := gcsClient.ObjectGenerations(versionedBucketName, filepath.Join(directoryPrefix, "version"))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(generations)).To(Equal(0))
 
@@ -353,7 +353,7 @@ var _ = Describe("out", func() {
 				err = json.NewDecoder(reader).Decode(&outResponse)
 				Expect(err).ToNot(HaveOccurred())
 
-				url, err := gcsClient.URL(bucketName, "files/version", int64(0))
+				url, err := gcsClient.URL(bucketName, filepath.Join(directoryPrefix, "version"), int64(0))
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(outResponse).To(Equal(out.OutResponse{
@@ -379,7 +379,7 @@ var _ = Describe("out", func() {
 				outRequest = out.OutRequest{
 					Source: gcsresource.Source{
 						Bucket:        versionedBucketName,
-						VersionedFile: "files/version",
+						VersionedFile: filepath.Join(directoryPrefix, "version"),
 					},
 					Params: out.Params{
 						File: "file-to-*",
@@ -391,16 +391,16 @@ var _ = Describe("out", func() {
 			})
 
 			AfterEach(func() {
-				generations, err := gcsClient.ObjectGenerations(versionedBucketName, "files/version")
+				generations, err := gcsClient.ObjectGenerations(versionedBucketName, filepath.Join(directoryPrefix, "version"))
 				Expect(err).ToNot(HaveOccurred())
 				for _, generation := range generations {
-					err := gcsClient.DeleteObject(versionedBucketName, "files/version", generation)
+					err := gcsClient.DeleteObject(versionedBucketName, filepath.Join(directoryPrefix, "version"), generation)
 					Expect(err).ToNot(HaveOccurred())
 				}
 			})
 
 			It("uploads the file and outputs the response", func() {
-				generations, err := gcsClient.ObjectGenerations(versionedBucketName, "files/version")
+				generations, err := gcsClient.ObjectGenerations(versionedBucketName, filepath.Join(directoryPrefix, "version"))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(len(generations)).To(Equal(1))
 
@@ -408,7 +408,7 @@ var _ = Describe("out", func() {
 				err = json.NewDecoder(reader).Decode(&outResponse)
 				Expect(err).ToNot(HaveOccurred())
 
-				url, err := gcsClient.URL(versionedBucketName, "files/version", generations[0])
+				url, err := gcsClient.URL(versionedBucketName, filepath.Join(directoryPrefix, "version"), generations[0])
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(outResponse).To(Equal(out.OutResponse{
@@ -434,7 +434,7 @@ var _ = Describe("out", func() {
 				outRequest = out.OutRequest{
 					Source: gcsresource.Source{
 						Bucket:        directoryPrefix,
-						VersionedFile: "files/version",
+						VersionedFile: filepath.Join(directoryPrefix, "version"),
 					},
 					Params: out.Params{
 						File: "file-to-*",
