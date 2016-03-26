@@ -2,8 +2,12 @@
 
 set -e
 
+export GOPATH=$PWD/go
+export PATH=$GOPATH/bin:$PATH
+
+cd $GOPATH/src/github.com/frodenas/gcs-resource
+
 go get github.com/onsi/ginkgo/ginkgo
 go get github.com/onsi/gomega
 
-export GOPATH=$PWD/go
-CGO_ENABLED=1 ginkgo -race -r -p
+ginkgo -r -p integration
