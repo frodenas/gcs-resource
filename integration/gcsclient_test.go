@@ -29,7 +29,7 @@ var _ = Describe("GCSclient", func() {
 
 	Describe("with a non versioned bucket", func() {
 		BeforeEach(func() {
-			tempDir, err = ioutil.TempDir("", "gcs-upload-dir")
+			tempDir, err = ioutil.TempDir("", "gcs_client_integration_test")
 			Expect(err).ToNot(HaveOccurred())
 
 			tempFile, err = ioutil.TempFile(tempDir, "file-to-upload")
