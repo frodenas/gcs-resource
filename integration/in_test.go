@@ -111,7 +111,7 @@ var _ = Describe("in", func() {
 			Expect(err).ToNot(HaveOccurred())
 			directoryPrefix = "in-request-files-" + guid.String()
 
-			tempFile, err := ioutil.TempFile("", "file-to-upload")
+			tempFile, err := ioutil.TempFile("", directoryPrefix)
 			Expect(err).ToNot(HaveOccurred())
 			tempFile.Close()
 
@@ -131,6 +131,9 @@ var _ = Describe("in", func() {
 			Expect(err).ToNot(HaveOccurred())
 
 			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-download-3"), tempFile.Name())
+			Expect(err).ToNot(HaveOccurred())
+
+			err = os.Remove(tempFile.Name())
 			Expect(err).ToNot(HaveOccurred())
 		})
 
@@ -322,13 +325,13 @@ var _ = Describe("in", func() {
 		BeforeEach(func() {
 			guid, err := uuid.NewV4()
 			Expect(err).ToNot(HaveOccurred())
-			directoryPrefix = "out-request-files-" + guid.String()
+			directoryPrefix = "in-request-files-" + guid.String()
 		})
 
 		Context("when the bucket is versioned", func() {
 			Context("when the versioned file exists", func() {
 				BeforeEach(func() {
-					tempFile, err := ioutil.TempFile("", "file-to-upload")
+					tempFile, err := ioutil.TempFile("", directoryPrefix)
 					Expect(err).ToNot(HaveOccurred())
 					tempFile.Close()
 
@@ -348,6 +351,9 @@ var _ = Describe("in", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					generation3, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), tempFile.Name())
+					Expect(err).ToNot(HaveOccurred())
+
+					err = os.Remove(tempFile.Name())
 					Expect(err).ToNot(HaveOccurred())
 
 					inRequest = in.InRequest{
