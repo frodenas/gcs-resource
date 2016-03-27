@@ -1,0 +1,56 @@
+---
+groups:
+  - name: gcs-resource
+    jobs:
+      - unit-tests
+      - integration-tests
+      - build-image
+
+jobs:
+  - name: unit-tests
+    plan:
+      - aggregate:
+        - {trigger: true, get: gcs-resource-src}
+
+      - task: unit-tests
+        file: gcs-resource-src/ci/tasks/unit-tests.yml
+
+  - name: integration-tests
+    plan:
+      - aggregate:
+        - {trigger: true, passed: [unit-tests], get: gcs-resource-src}
+
+      - task: integration-tests
+        file: gcs-resource-src/ci/tasks/integration-tests.yml
+        config:
+          params:
+            GCS_RESOURCE_JSON_KEY: {{gcs_resource_json_key}}
+            GCS_RESOURCE_BUCKET_NAME: {{gcs_resource_bucket_name}}
+            GCS_RESOURCE_VERSIONED_BUCKET_NAME: {{gcs_resource_versioned_bucket_name}}
+
+  - name: build-image
+    plan:
+      - aggregate:
+        - {trigger: true, passed: [integration-tests], get: gcs-resource-src}
+
+      - task: build
+        file: gcs-resource-src/ci/tasks/build.yml
+
+      - put: gcs-resource-image
+        params:
+          build: built-resource
+
+resources:
+  - name: gcs-resource-src
+    type: git
+    source:
+      uri: https://github.com/frodenas/gcs-resource.git
+      branch: master
+
+  - name: gcs-resource-image
+    type: docker-image
+    source:
+      email: {{docker_email}}
+      username: {{docker_username}}
+      password: {{docker_password}}
+      repository: frodenas/gcs-resource

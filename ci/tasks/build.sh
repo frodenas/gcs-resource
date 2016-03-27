@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -e -x
 
 BUILD_DIR=$PWD/built-resource
 
