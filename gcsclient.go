@@ -236,7 +236,11 @@ func (gcsclient *gcsclient) getBucketVersioning(bucketName string) (bool, error)
 		return false, err
 	}
 
-	return bucket.Versioning.Enabled, nil
+	if bucket.Versioning != nil {
+		return bucket.Versioning.Enabled, nil
+	}
+
+	return false, nil
 }
 
 func (gcsclient *gcsclient) getObjectGenerations(bucketName string, objectPath string) ([]int64, error) {
