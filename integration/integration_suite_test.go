@@ -57,8 +57,8 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	inPath = sd.InPath
 	outPath = sd.OutPath
 
-	Expect(bucketName).ToNot(BeEmpty(), "must specify $GCS_TESTING_BUCKET")
-	Expect(versionedBucketName).ToNot(BeEmpty(), "must specify $GCS_VERSIONED_TESTING_BUCKET")
+	Expect(bucketName).ToNot(BeEmpty(), "must specify $GCS_RESOURCE_BUCKET_NAME")
+	Expect(versionedBucketName).ToNot(BeEmpty(), "must specify $GCS_RESOURCE_VERSIONED_BUCKET_NAME")
 
 	gcsClient, err = gcsresource.NewGCSClient(
 		ioutil.Discard,
