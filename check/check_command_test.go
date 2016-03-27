@@ -102,7 +102,7 @@ var _ = Describe("Check Command", func() {
 					request.Version.Path = "folder/file-2.4.3.tgz"
 				})
 
-				It("includes the latest versions", func() {
+				It("includes the most recent versions", func() {
 					response, err := command.Run(request)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -189,7 +189,7 @@ var _ = Describe("Check Command", func() {
 					request.Version.Generation = 456
 				})
 
-				It("includes the latest versions", func() {
+				It("includes the most recent versions", func() {
 					response, err := command.Run(request)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -204,21 +204,36 @@ var _ = Describe("Check Command", func() {
 					))
 				})
 
-				Context("when there is not any version greater than the previous version", func() {
-					BeforeEach(func() {
-						request.Version.Generation = 9999
+				Context("and the version does not exists", func() {
+					Context("but there are greater versions", func() {
+						BeforeEach(func() {
+							request.Version.Generation = 1000
+						})
+
+						It("returns the latest version", func() {
+							response, err := command.Run(request)
+							Expect(err).ToNot(HaveOccurred())
+
+							Expect(response).To(HaveLen(1))
+							Expect(response).To(ConsistOf(
+								gcsresource.Version{
+									Generation: 1234,
+								},
+							))
+						})
 					})
 
-					It("returns the latest version", func() {
-						response, err := command.Run(request)
-						Expect(err).ToNot(HaveOccurred())
+					Context("and there are not greater versions", func() {
+						BeforeEach(func() {
+							request.Version.Generation = 9999
+						})
 
-						Expect(response).To(HaveLen(1))
-						Expect(response).To(ConsistOf(
-							gcsresource.Version{
-								Generation: 1234,
-							},
-						))
+						It("returns the latest version", func() {
+							response, err := command.Run(request)
+							Expect(err).ToNot(HaveOccurred())
+
+							Expect(response).To(HaveLen(0))
+						})
 					})
 				})
 			})

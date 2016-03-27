@@ -33,7 +33,7 @@ func (command *CheckCommand) checkByRegex(request CheckRequest) CheckResponse {
 	extractions := versions.GetBucketObjectVersions(command.gcsClient, request.Source)
 
 	if len(extractions) == 0 {
-		return nil
+		return CheckResponse{}
 	}
 
 	lastVersion, matched := versions.Extract(request.Version.Path, request.Source.Regexp)
@@ -65,9 +65,7 @@ func (command *CheckCommand) checkByVersionedFile(request CheckRequest) (CheckRe
 				response = append(response, version)
 			}
 		}
-	}
-
-	if len(response) == 0 {
+	} else {
 		maxGeneration := generations[0]
 		for _, generation := range generations {
 			if generation > maxGeneration {
