@@ -10,7 +10,8 @@ type OutRequest struct {
 }
 
 type Params struct {
-	File string `json:"file"`
+	File          string `json:"file"`
+	PredefinedACL string `json:"predefined_acl"`
 }
 
 func (params Params) IsValid() (bool, string) {

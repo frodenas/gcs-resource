@@ -188,7 +188,8 @@ var _ = Describe("out", func() {
 						Regexp:  filepath.Join(directoryPrefix, "file-to-*"),
 					},
 					Params: out.Params{
-						File: "file-to-*",
+						File:          "file-to-*",
+						PredefinedACL: "publicRead",
 					},
 				}
 
@@ -389,7 +390,8 @@ var _ = Describe("out", func() {
 						VersionedFile: filepath.Join(directoryPrefix, "version"),
 					},
 					Params: out.Params{
-						File: "file-to-*",
+						File:          "file-to-*",
+						PredefinedACL: "publicRead",
 					},
 				}
 

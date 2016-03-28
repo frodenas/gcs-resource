@@ -36,7 +36,7 @@ func (command *OutCommand) Run(sourceDir string, request OutRequest) (OutRespons
 	objectPath := command.objectPath(request, localPath)
 
 	bucketName := request.Source.Bucket
-	generation, err := command.gcsClient.UploadFile(bucketName, objectPath, localPath)
+	generation, err := command.gcsClient.UploadFile(bucketName, objectPath, localPath, request.Params.PredefinedACL)
 	if err != nil {
 		return OutResponse{}, err
 	}

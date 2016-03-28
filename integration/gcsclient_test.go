@@ -50,13 +50,13 @@ var _ = Describe("GCSclient", func() {
 		})
 
 		It("can interact with buckets", func() {
-			_, err := gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-upload-1"), tempFile.Name())
+			_, err := gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-upload-1"), tempFile.Name(), "")
 			Expect(err).ToNot(HaveOccurred())
 
-			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), tempFile.Name())
+			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), tempFile.Name(), "")
 			Expect(err).ToNot(HaveOccurred())
 
-			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), tempFile.Name())
+			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), tempFile.Name(), "")
 			Expect(err).ToNot(HaveOccurred())
 
 			files, err := gcsClient.BucketObjects(bucketName, directoryPrefix)
@@ -121,13 +121,13 @@ var _ = Describe("GCSclient", func() {
 		})
 
 		It("can interact with buckets", func() {
-			fileOneGeneration, err := gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-1"), tempVerFile.Name())
+			fileOneGeneration, err := gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-1"), tempVerFile.Name(), "")
 			Expect(err).ToNot(HaveOccurred())
 
-			fileTwoGeneration1, err := gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), tempVerFile.Name())
+			fileTwoGeneration1, err := gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), tempVerFile.Name(), "")
 			Expect(err).ToNot(HaveOccurred())
 
-			fileTwoGeneration2, err := gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), tempVerFile.Name())
+			fileTwoGeneration2, err := gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), tempVerFile.Name(), "")
 			Expect(err).ToNot(HaveOccurred())
 
 			files, err := gcsClient.BucketObjects(versionedBucketName, directoryPrefix)

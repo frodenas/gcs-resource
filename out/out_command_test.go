@@ -140,11 +140,12 @@ var _ = Describe("Out Command", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
-				bucketName, objectPath, localPath := gcsClient.UploadFileArgsForCall(0)
+				bucketName, objectPath, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
 
 				Expect(bucketName).To(Equal("bucket-name"))
 				Expect(objectPath).To(Equal("folder/file.tgz"))
 				Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
+				Expect(predefinedACL).To(BeEmpty())
 			})
 
 			It("returns a response", func() {
@@ -184,6 +185,25 @@ var _ = Describe("Out Command", func() {
 				_, err := command.Run(sourceDir, request)
 				Expect(err).ToNot(HaveOccurred())
 			})
+
+			Context("when PredefinedACL param is set", func() {
+				BeforeEach(func() {
+					request.Params.PredefinedACL = "publicRead"
+				})
+
+				It("uploads the file", func() {
+					_, err := command.Run(sourceDir, request)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
+					bucketName, objectPath, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
+
+					Expect(bucketName).To(Equal("bucket-name"))
+					Expect(objectPath).To(Equal("folder/file.tgz"))
+					Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
+					Expect(predefinedACL).To(Equal("publicRead"))
+				})
+			})
 		})
 
 		Describe("with versioned_file", func() {
@@ -197,11 +217,12 @@ var _ = Describe("Out Command", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
-				bucketName, objectPath, localPath := gcsClient.UploadFileArgsForCall(0)
+				bucketName, objectPath, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
 
 				Expect(bucketName).To(Equal("bucket-name"))
 				Expect(objectPath).To(Equal("folder/version"))
 				Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
+				Expect(predefinedACL).To(BeEmpty())
 			})
 
 			It("returns a response", func() {
@@ -240,6 +261,25 @@ var _ = Describe("Out Command", func() {
 
 				_, err := command.Run(sourceDir, request)
 				Expect(err).ToNot(HaveOccurred())
+			})
+
+			Context("when PredefinedACL param is set", func() {
+				BeforeEach(func() {
+					request.Params.PredefinedACL = "publicRead"
+				})
+
+				It("uploads the file", func() {
+					_, err := command.Run(sourceDir, request)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
+					bucketName, objectPath, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
+
+					Expect(bucketName).To(Equal("bucket-name"))
+					Expect(objectPath).To(Equal("folder/version"))
+					Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
+					Expect(predefinedACL).To(Equal("publicRead"))
+				})
 			})
 		})
 	})
