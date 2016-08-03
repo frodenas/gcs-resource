@@ -1,0 +1,17 @@
+#!/bin/bash
+# vim: set ft=sh
+
+set -e -x
+
+ROOT=$PWD
+
+export GOPATH=$PWD/gopath
+export PATH=$GOPATH/bin:$PATH
+
+BUILD_DIR=$PWD/built-resource
+
+cd $GOPATH/src/github.com/frodenas/gcs-resource
+
+make
+
+cp -a assets/ Dockerfile $BUILD_DIR
