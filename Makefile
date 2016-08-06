@@ -9,7 +9,6 @@ build:
 # Get all dependencies
 get-deps:
 	# Go tools
-	go get golang.org/x/tools/cmd/vet
 	go get github.com/golang/lint/golint
 
 	# Test tools

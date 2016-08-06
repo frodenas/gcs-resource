@@ -74,23 +74,11 @@ a new version of that file.
 
 ## Example Configuration
 
-### Enabling this resource on your Concourse workers
-
-In your bosh deployment manifest, add the `additional_resource_types` property to the `groundcrew` job:
-
-```yaml
-properties:
-  groundcrew:
-    additional_resource_types:
-      - type: gcs-resource
-        image: docker:///frodenas/gcs-resource
-```
-
 ### Resource Type
 
 ```yaml
 resource_types:
-  - name: gcs-request
+  - name: gcs-resource
     type: docker-image
     source:
       repository: frodenas/gcs-resource
@@ -128,3 +116,19 @@ First get the resource via: `go get github.com/frodenas/gcs-resource`
 Run the `unit-tests`: `make`
 
 Run the `integration-tests`: `make integration-tests`
+
+## Developing using Concourse
+Clone this repository and just run one-off task with concourse
+
+```bash
+fly -t ConcourseTarget execute -c build.yml -i gcs-resource=. -o built-resource=.
+```
+
+
+Just build the Docker image to be use inside your pipeline
+
+```bash
+ docker build -t frodenas/gcs-resource .
+```
+
+
