@@ -3,6 +3,7 @@ package integration_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -365,7 +366,7 @@ var _ = Describe("out", func() {
 
 				Expect(outResponse).To(Equal(out.OutResponse{
 					Version: gcsresource.Version{
-						Generation: int64(0),
+						Generation: "0",
 					},
 					Metadata: []gcsresource.MetadataPair{
 						{
@@ -422,7 +423,7 @@ var _ = Describe("out", func() {
 
 				Expect(outResponse).To(Equal(out.OutResponse{
 					Version: gcsresource.Version{
-						Generation: generations[0],
+						Generation: fmt.Sprintf("%d", generations[0]),
 					},
 					Metadata: []gcsresource.MetadataPair{
 						{

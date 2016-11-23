@@ -162,7 +162,7 @@ var _ = Describe("Out Command", func() {
 				Expect(generation).To(Equal(int64(0)))
 
 				Expect(response.Version.Path).To(Equal("folder/file.tgz"))
-				Expect(response.Version.Generation).To(Equal(int64(0)))
+				Expect(response.Version.Generation).To(Equal(""))
 
 				Expect(response.Metadata[0].Name).To(Equal("filename"))
 				Expect(response.Metadata[0].Value).To(Equal("file.tgz"))
@@ -239,7 +239,7 @@ var _ = Describe("Out Command", func() {
 				Expect(generation).To(Equal(int64(12345)))
 
 				Expect(response.Version.Path).To(BeEmpty())
-				Expect(response.Version.Generation).To(Equal(int64(12345)))
+				Expect(response.Version.Generation).To(Equal("12345"))
 
 				Expect(response.Metadata[0].Name).To(Equal("filename"))
 				Expect(response.Metadata[0].Value).To(Equal("version"))

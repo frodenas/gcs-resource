@@ -179,7 +179,7 @@ var _ = Describe("In Command", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(response.Version.Path).To(Equal("folder/file-3.53.tgz"))
-					Expect(response.Version.Generation).To(Equal(int64(0)))
+					Expect(response.Version.Generation).To(Equal(""))
 
 					Expect(response.Metadata[0].Name).To(Equal("filename"))
 					Expect(response.Metadata[0].Value).To(Equal("file-3.53.tgz"))
@@ -292,7 +292,7 @@ var _ = Describe("In Command", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(response.Version.Path).To(Equal("folder/file-1.3.tgz"))
-					Expect(response.Version.Generation).To(Equal(int64(0)))
+					Expect(response.Version.Generation).To(Equal(""))
 
 					Expect(response.Metadata[0].Name).To(Equal("filename"))
 					Expect(response.Metadata[0].Value).To(Equal("file-1.3.tgz"))
@@ -322,7 +322,7 @@ var _ = Describe("In Command", func() {
 		Describe("with versioned_file", func() {
 			BeforeEach(func() {
 				request.Source.VersionedFile = "folder/version"
-				request.Version.Generation = int64(12345)
+				request.Version.Generation = "12345"
 			})
 
 			It("creates the destination directory", func() {
@@ -387,7 +387,7 @@ var _ = Describe("In Command", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(response.Version.Path).To(BeEmpty())
-				Expect(response.Version.Generation).To(Equal(int64(12345)))
+				Expect(response.Version.Generation).To(Equal("12345"))
 
 				Expect(response.Metadata[0].Name).To(Equal("filename"))
 				Expect(response.Metadata[0].Value).To(Equal("version"))

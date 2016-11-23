@@ -1,5 +1,7 @@
 package gcsresource
 
+import "strconv"
+
 type Source struct {
 	JSONKey       string `json:"json_key"`
 	Bucket        string `json:"bucket"`
@@ -21,7 +23,15 @@ func (source Source) IsValid() (bool, string) {
 
 type Version struct {
 	Path       string `json:"path,omitempty"`
-	Generation int64  `json:"generation,omitempty"`
+	Generation string `json:"generation,omitempty"`
+}
+
+func (v Version) GenerationValue() (int64, error) {
+	i, err := strconv.ParseInt(v.Generation, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return i, nil
 }
 
 type MetadataPair struct {

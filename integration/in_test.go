@@ -3,6 +3,7 @@ package integration_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -363,7 +364,7 @@ var _ = Describe("in", func() {
 							VersionedFile: filepath.Join(directoryPrefix, "version"),
 						},
 						Version: gcsresource.Version{
-							Generation: generation2,
+							Generation: fmt.Sprintf("%d", generation2),
 						},
 					}
 
@@ -390,7 +391,7 @@ var _ = Describe("in", func() {
 
 					Expect(inResponse).To(Equal(in.InResponse{
 						Version: gcsresource.Version{
-							Generation: generation2,
+							Generation: fmt.Sprintf("%d", generation2),
 						},
 						Metadata: []gcsresource.MetadataPair{
 							{
@@ -430,7 +431,7 @@ var _ = Describe("in", func() {
 							VersionedFile: filepath.Join(directoryPrefix, "missing"),
 						},
 						Version: gcsresource.Version{
-							Generation: generation2,
+							Generation: fmt.Sprintf("%d", generation2),
 						},
 					}
 
@@ -456,7 +457,7 @@ var _ = Describe("in", func() {
 							VersionedFile: filepath.Join(directoryPrefix, "version"),
 						},
 						Version: gcsresource.Version{
-							Generation: int64(12345),
+							Generation: "12345",
 						},
 					}
 
@@ -480,7 +481,7 @@ var _ = Describe("in", func() {
 							VersionedFile: filepath.Join(directoryPrefix, "missing"),
 						},
 						Version: gcsresource.Version{
-							Generation: 0,
+							Generation: "0",
 						},
 					}
 

@@ -2,6 +2,7 @@ package in
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -97,7 +98,10 @@ func (command *InCommand) pathToDownload(request InRequest) (string, error) {
 func (command *InCommand) inByVersionedFile(destinationDir string, request InRequest) (InResponse, error) {
 	bucketName := request.Source.Bucket
 	objectPath := request.Source.VersionedFile
-	generation := request.Version.Generation
+	generation, err := request.Version.GenerationValue()
+	if err != nil {
+		return InResponse{}, err
+	}
 
 	if err := command.downloadFile(bucketName, objectPath, generation, destinationDir); err != nil {
 		return InResponse{}, err
@@ -118,7 +122,7 @@ func (command *InCommand) inByVersionedFile(destinationDir string, request InReq
 
 	return InResponse{
 		Version: gcsresource.Version{
-			Generation: generation,
+			Generation: fmt.Sprintf("%d", generation),
 		},
 		Metadata: command.metadata(objectPath, url),
 	}, nil
