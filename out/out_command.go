@@ -47,7 +47,7 @@ func (command *OutCommand) Run(sourceDir string, request OutRequest) (OutRespons
 		version.Path = objectPath
 		url, _ = command.gcsClient.URL(bucketName, objectPath, 0)
 	} else {
-		version.Generation = generation
+		version.Generation = fmt.Sprintf("%d", generation)
 		url, _ = command.gcsClient.URL(bucketName, objectPath, generation)
 	}
 

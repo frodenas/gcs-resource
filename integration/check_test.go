@@ -3,6 +3,7 @@ package integration_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -450,7 +451,7 @@ var _ = Describe("check", func() {
 
 					Expect(checkResponse).To(Equal(check.CheckResponse{
 						{
-							Generation: generation3,
+							Generation: fmt.Sprintf("%d", generation3),
 						},
 					}))
 				})
@@ -466,7 +467,7 @@ var _ = Describe("check", func() {
 								VersionedFile: filepath.Join(directoryPrefix, "version"),
 							},
 							Version: gcsresource.Version{
-								Generation: generation1,
+								Generation: fmt.Sprintf("%d", generation1),
 							},
 						}
 
@@ -481,10 +482,10 @@ var _ = Describe("check", func() {
 
 						Expect(checkResponse).To(Equal(check.CheckResponse{
 							{
-								Generation: generation2,
+								Generation: fmt.Sprintf("%d", generation2),
 							},
 							{
-								Generation: generation3,
+								Generation: fmt.Sprintf("%d", generation3),
 							},
 						}))
 					})
@@ -500,7 +501,7 @@ var _ = Describe("check", func() {
 									VersionedFile: filepath.Join(directoryPrefix, "version"),
 								},
 								Version: gcsresource.Version{
-									Generation: generation2 + 1,
+									Generation: fmt.Sprintf("%d", generation2+1),
 								},
 							}
 
@@ -515,7 +516,7 @@ var _ = Describe("check", func() {
 
 							Expect(checkResponse).To(Equal(check.CheckResponse{
 								{
-									Generation: generation3,
+									Generation: fmt.Sprintf("%d", generation3),
 								},
 							}))
 						})
@@ -530,7 +531,7 @@ var _ = Describe("check", func() {
 									VersionedFile: filepath.Join(directoryPrefix, "version"),
 								},
 								Version: gcsresource.Version{
-									Generation: generation3 + 1,
+									Generation: fmt.Sprintf("%d", generation3+1),
 								},
 							}
 

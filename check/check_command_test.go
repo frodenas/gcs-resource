@@ -178,7 +178,7 @@ var _ = Describe("Check Command", func() {
 					Expect(response).To(HaveLen(1))
 					Expect(response).To(ConsistOf(
 						gcsresource.Version{
-							Generation: 1234,
+							Generation: "1234",
 						},
 					))
 				})
@@ -186,7 +186,7 @@ var _ = Describe("Check Command", func() {
 
 			Context("when there is a previous version", func() {
 				BeforeEach(func() {
-					request.Version.Generation = 456
+					request.Version.Generation = "456"
 				})
 
 				It("includes the most recent versions", func() {
@@ -196,10 +196,10 @@ var _ = Describe("Check Command", func() {
 					Expect(response).To(HaveLen(2))
 					Expect(response).To(ConsistOf(
 						gcsresource.Version{
-							Generation: 789,
+							Generation: "789",
 						},
 						gcsresource.Version{
-							Generation: 1234,
+							Generation: "1234",
 						},
 					))
 				})
@@ -207,7 +207,7 @@ var _ = Describe("Check Command", func() {
 				Context("and the version does not exists", func() {
 					Context("but there are greater versions", func() {
 						BeforeEach(func() {
-							request.Version.Generation = 1000
+							request.Version.Generation = "1000"
 						})
 
 						It("returns the latest version", func() {
@@ -217,7 +217,7 @@ var _ = Describe("Check Command", func() {
 							Expect(response).To(HaveLen(1))
 							Expect(response).To(ConsistOf(
 								gcsresource.Version{
-									Generation: 1234,
+									Generation: "1234",
 								},
 							))
 						})
@@ -225,7 +225,7 @@ var _ = Describe("Check Command", func() {
 
 					Context("and there are not greater versions", func() {
 						BeforeEach(func() {
-							request.Version.Generation = 9999
+							request.Version.Generation = "9999"
 						})
 
 						It("returns the latest version", func() {

@@ -23,7 +23,7 @@ type GCSClient interface {
 }
 
 type gcsclient struct {
-	storageService  *storage.Service
+	storageService *storage.Service
 	progressOutput io.Writer
 }
 

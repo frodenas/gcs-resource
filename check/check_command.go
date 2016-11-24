@@ -2,6 +2,7 @@ package check
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/frodenas/gcs-resource"
 	"github.com/frodenas/gcs-resource/versions"
@@ -56,11 +57,16 @@ func (command *CheckCommand) checkByVersionedFile(request CheckRequest) (CheckRe
 		return response, nil
 	}
 
-	if request.Version.Generation != 0 {
+	if request.Version.Generation != "" {
 		for _, generation := range generations {
-			if generation > request.Version.Generation {
+			requestGeneration, err := request.Version.GenerationValue()
+			if err != nil {
+				return nil, err
+			}
+
+			if generation > requestGeneration {
 				version := gcsresource.Version{
-					Generation: generation,
+					Generation: fmt.Sprintf("%d", generation),
 				}
 				response = append(response, version)
 			}
@@ -74,7 +80,7 @@ func (command *CheckCommand) checkByVersionedFile(request CheckRequest) (CheckRe
 		}
 
 		version := gcsresource.Version{
-			Generation: maxGeneration,
+			Generation: fmt.Sprintf("%d", maxGeneration),
 		}
 		response = append(response, version)
 	}
