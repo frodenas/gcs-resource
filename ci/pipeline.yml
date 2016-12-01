@@ -22,11 +22,10 @@ jobs:
 
       - task: integration-tests
         file: gcs-resource-src/ci/tasks/integration-tests.yml
-        config:
-          params:
-            GCS_RESOURCE_JSON_KEY: {{gcs_resource_json_key}}
-            GCS_RESOURCE_BUCKET_NAME: {{gcs_resource_bucket_name}}
-            GCS_RESOURCE_VERSIONED_BUCKET_NAME: {{gcs_resource_versioned_bucket_name}}
+        params:
+          GCS_RESOURCE_JSON_KEY: {{gcs_resource_json_key}}
+          GCS_RESOURCE_BUCKET_NAME: {{gcs_resource_bucket_name}}
+          GCS_RESOURCE_VERSIONED_BUCKET_NAME: {{gcs_resource_versioned_bucket_name}}
 
   - name: build-image
     plan:
