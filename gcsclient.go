@@ -124,7 +124,10 @@ func (gcsclient *gcsclient) DownloadFile(bucketName string, objectPath string, g
 	defer response.Body.Close()
 
 	reader := progress.NewProxyReader(response.Body)
-	io.Copy(localFile, reader)
+	_, err = io.Copy(localFile, reader)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
