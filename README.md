@@ -28,7 +28,7 @@ One of the following two options must be specified:
 
   The version extracted from this pattern is used to version the resource. Semantic versions, or just numbers, are supported. Accordingly, full regular expressions are supported, to specify the capture groups.
 
-* `versioned_file`: if you enable versioning for your GCS bucket then you can keep the file name the same and upload new versions of your file without resorting to version numbers. This property is the path to the file in your GCS bucket.
+* `versioned_file`: if you [enable versioning](https://cloud.google.com/storage/docs/object-versioning#_Enabling) for your GCS bucket then you can keep the file name the same and upload new versions of your file without resorting to version numbers. This property is the path to the file in your GCS bucket.
 
 ## Behavior
 
