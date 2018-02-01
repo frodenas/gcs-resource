@@ -10,12 +10,22 @@ services:
 env:
   matrix:
     - DOCKER_IMAGE_NAME=frodenas/gcs-resource
+  global:
+    - GOOGLE_APPLICATION_CREDENTIALS=$TRAVIS_BUILD_DIR/gce_key.json
+    - secure: j2PI4lSeuvVRY2FE0CcDc8O6k+jDq5QUGBPWuoGi3+PM6+f5j5QQjA2T7afsp2bG9e7EQ64n0gB2ks/antXHgViyNJ3nMiCtSfVpUmWHlIC/6dfhUdA+FQzjfSwJ7vhJKXDH81Cin509uSZQ+eHwl+ZSUV/7db6K7RdK7GKzxZr92rhBlBo4l+GC83im/9iWEpj5YNMmxjC2EXxXiW0XebUm2Y0+isYnTrEgcwR6L1XOV8CP30Pwmhk+k5KnbX4rWLhznQwkHZPbc+zjBUIep5mzc7wujwPM+HMb7ohzqYmeGziIAEGv99Rsz71oLoT5sjE/KTiNVRHvZxqws0OWjxsy8uo7eB433Tfm4mU2ctj/mNFsoZ/wWPoDUXA5sXeoWJ6URtnwtjjO3lgoaAx+2Gv2Zm/w9a18O2PNfjO9k9gRSxMl7fkvmiaadz91OSZascfIZqI3M+Z2o8XOIZXH5VIGovY0SfHFCYODybXpWrakuZ01O9cEDAi2zBc2nucgHNJM7ivp0SVwZGi35uiotxkXEtaHisSnSygAL1Vi9UUP9e+iDqR5zY63J0mkeA/LHo+N2Ob0fA1NFzWk/wxx9/0NFgav0Fq2/rIj27PJpzI9n8S9u16vcgkWCyrsmfTvMSsPppG82VwIrlMM6J52u9xiloysFfZel3GzNZwNRcg=
+    - secure: pWzKFugsT6DHAh6D5NmNx+4mbsPlNGQdXSvFUfO3nDj3CJ7SSTt+mxAifcFrymPCTc3YnMjXR1u5gldWNcZnYXw5ObUm8+e+HTYhN9dSTLBhczr4+b7p4fJ6D+Ke99PF4HoZirQOHFW169jU4YVpz6yV6WIycWXlgeVBSp3eFdJvCh6FiQN17Ym3POxt8CMuy03QfFnd2qQ9x9XfQliOlsn4ZjCQRJfX7IRAiK31/Lb4cdlyswMcgnN3W/O2Sdeh4b26Rp+OoBRbyeF2rSLN1hfarHbCTMEgaI4HrGFZ5d4nTkVbscMsapufgrBwOsI/HvbEWRK7E1NEubD4isgOGMpZuU4IJgbsegKcf/qAkIJfMfk9VxZpHftBRQ+Va6J4Nv8L5VPngtOfa8Ct3QIUV4MmK+RLzAFoT66iu4qRFQL3WUyRZavKgXZekYcThfF9JfPWhcDQf+FlwJdP9uVMSG6PEzX+GK0vRQG/7c0egcpFBYOlYiM745ZissoFJY8bMT9O0UL4lYtsLUpwBJbp6gnaGFwerGSPPhnKocFF73Z6yeMpcYCAFbPh0RdgLh8PfS9xbduIABuW8F37j0DS9je6AlJ1cQ8pjmYlWa395cAidz2WPR7aZbzgH4xEMTzVYfqqgfxCBYnwN19gG1XDm5iG8KA9eDrTm0sbcDDLPyg=
+
+before_install:
+  - openssl aes-256-cbc -K $encrypted_901c39c3ea3a_key -iv $encrypted_901c39c3ea3a_iv
+    -in gce_key.json.enc -out gce_key.json -d
 
 jobs:
   include:
-    - stage: unit-tests
+    - stage: Unit Tests
       script: make unit-tests
-    - stage: build-docker-image
+    - stage: Integration Tests
+      script: make integration-tests
+    - stage: Build Docker Image
       script:
         - make build
         - |

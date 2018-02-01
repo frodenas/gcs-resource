@@ -34,7 +34,6 @@ unit-tests: deps
 	@$(GINKGO) version
 	@$(GINKGO) -r -race -p -skipPackage integration,vendor
 
-# Run integration tests
 integration-tests: deps
 	@echo ">> running integration tests"
 	@$(GINKGO) version
