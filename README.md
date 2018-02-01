@@ -118,12 +118,12 @@ Run the `unit-tests`: `make`
 Run the `integration-tests`: `make integration-tests`
 
 ## Developing using Concourse
+
 Clone this repository and just run one-off task with concourse
 
 ```bash
 fly -t ConcourseTarget execute -c build.yml -i gcs-resource=. -o built-resource=.
 ```
-
 
 Just build the Docker image to be use inside your pipeline
 
@@ -131,4 +131,13 @@ Just build the Docker image to be use inside your pipeline
  docker build -t frodenas/gcs-resource .
 ```
 
+## Contributing
 
+Refer to the [contributing guidelines][contributing].
+
+## License
+
+Apache License 2.0, see [LICENSE][license].
+
+[contributing]: https://github.com/frodenas/gcs-resource/blob/master/CONTRIBUTING.md
+[license]: https://github.com/frodenas/gcs-resource/blob/master/LICENSE
