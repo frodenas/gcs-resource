@@ -1,43 +1,47 @@
-default: test
+GO     := GO15VENDOREXPERIMENT=1 go
+GINKGO := ginkgo
+pkgs   = $(shell $(GO) list ./... | grep -v /vendor/)
 
-# Build gcs-resource binaries
-build:
-	go build -o assets/in ./cmd/in
-	go build -o assets/out ./cmd/out
-	go build -o assets/check ./cmd/check
+DOCKER_IMAGE_NAME ?= gcs-resource
+DOCKER_IMAGE_TAG  ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
 
-# Get all dependencies
-get-deps:
-	# Go tools
-	go get github.com/golang/lint/golint
+all: format build unit-tests
 
-	# Test tools
-	go get github.com/onsi/ginkgo/ginkgo
-	go get github.com/onsi/gomega
+deps:
+	@$(GO) get github.com/onsi/ginkgo/ginkgo
+	@$(GO) get github.com/onsi/gomega
 
-# Cleans up
-clean:
-	go clean ./...
+format:
+	@echo ">> formatting code"
+	@$(GO) fmt $(pkgs)
 
-# Run gofmt
-fmt:
-	ls -d */ | grep -v vendor | xargs -L 1 gofmt -l -w
+style:
+	@echo ">> checking code style"
+	@! gofmt -d $(shell find . -path ./vendor -prune -o -name '*.go' -print) | grep '^'
 
-# Run golint
-lint:
-	ls -d */ | grep -v vendor | xargs -L 1 golint
-
-# Vet code
 vet:
-	go tool vet $$(ls -d */ | grep -v vendor)
+	@echo ">> vetting code"
+	@$(GO) vet $(pkgs)
 
-# Run unit tests
-unit-tests:
-	ginkgo -r -p -skipPackage integration,vendor
+build:
+	@echo ">> building binaries"
+	@$(GO) build -o assets/in ./cmd/in
+	@$(GO) build -o assets/out ./cmd/out
+	@$(GO) build -o assets/check ./cmd/check
+
+unit-tests: deps
+	@echo ">> running unit tests"
+	@$(GINKGO) version
+	@$(GINKGO) -r -race -p -skipPackage integration,vendor
 
 # Run integration tests
-integration-tests:
-	ginkgo -r -p integration
+integration-tests: deps
+	@echo ">> running integration tests"
+	@$(GINKGO) version
+	@$(GINKGO) -r -p integration
 
-# Runs the unit tests with coverage
-test: get-deps clean fmt lint vet unit-tests build
+docker:
+	@echo ">> building docker image"
+	@docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" .
+
+.PHONY: all deps format style vet build unit-tests integration-tests docker
