@@ -1,13 +1,13 @@
 {
  "kind": "discovery#restDescription",
- "etag": "\"bRFOOrZKfO9LweMbPqu0kcu6De8/obxe7w0FjJgGPQFNs6hMClVbJfI\"",
+ "etag": "\"YWOzh2SDasdU84ArJnpYek-OMdg/aE5XnXblJMQy68d2aZIGrlTQ05U\"",
  "discoveryVersion": "v1",
  "id": "storage:v1",
  "name": "storage",
  "version": "v1",
- "revision": "20160121",
+ "revision": "20171212",
  "title": "Cloud Storage JSON API",
- "description": "Lets you store and retrieve potentially-large, immutable data objects.",
+ "description": "Stores and retrieves potentially large, immutable data objects.",
  "ownerDomain": "google.com",
  "ownerName": "Google",
  "icons": {
@@ -23,7 +23,7 @@
  "basePath": "/storage/v1/",
  "rootUrl": "https://www.googleapis.com/",
  "servicePath": "storage/v1/",
- "batchPath": "batch",
+ "batchPath": "batch/storage/v1",
  "parameters": {
   "alt": {
    "type": "string",
@@ -108,6 +108,16 @@
       ]
      }
     },
+    "billing": {
+     "type": "object",
+     "description": "The bucket's billing configuration.",
+     "properties": {
+      "requesterPays": {
+       "type": "boolean",
+       "description": "When set to true, Requester Pays is enabled for this bucket."
+      }
+     }
+    },
     "cors": {
      "type": "array",
      "description": "The bucket's Cross-Origin Resource Sharing (CORS) configuration.",
@@ -143,11 +153,25 @@
       }
      }
     },
+    "defaultEventBasedHold": {
+     "type": "boolean",
+     "description": "Defines the default value for Event-Based hold on newly created objects in this bucket. Event-Based hold is a way to retain objects indefinitely until an event occurs, signified by the hold's release. After being released, such objects will be subject to bucket-level retention (if any). One sample use case of this flag is for banks to hold loan documents for at least 3 years after loan is paid in full. Here bucket-level retention is 3 years and the event is loan being paid in full. In this example these objects will be held intact for any number of years until the event has occurred (hold is released) and then 3 more years after that. Objects under Event-Based hold cannot be deleted, overwritten or archived until the hold is removed."
+    },
     "defaultObjectAcl": {
      "type": "array",
      "description": "Default access controls to apply to new objects when no ACL is provided.",
      "items": {
       "$ref": "ObjectAccessControl"
+     }
+    },
+    "encryption": {
+     "type": "object",
+     "description": "Encryption configuration used by default for newly inserted objects, when no encryption config is specified.",
+     "properties": {
+      "defaultKmsKeyName": {
+       "type": "string",
+       "description": "A Cloud KMS key that will be used to encrypt objects inserted into this bucket, if no encryption method is specified. Limited availability; usable only by enabled projects."
+      }
      }
     },
     "etag": {
@@ -156,12 +180,20 @@
     },
     "id": {
      "type": "string",
-     "description": "The ID of the bucket."
+     "description": "The ID of the bucket. For buckets, the id and name properties are the same."
     },
     "kind": {
      "type": "string",
      "description": "The kind of item this is. For buckets, this is always storage#bucket.",
      "default": "storage#bucket"
+    },
+    "labels": {
+     "type": "object",
+     "description": "User-provided labels, in key/value pairs.",
+     "additionalProperties": {
+      "type": "string",
+      "description": "An individual label entry."
+     }
     },
     "lifecycle": {
      "type": "object",
@@ -177,9 +209,13 @@
           "type": "object",
           "description": "The action to take.",
           "properties": {
+           "storageClass": {
+            "type": "string",
+            "description": "Target storage class. Required iff the type of the action is SetStorageClass."
+           },
            "type": {
             "type": "string",
-            "description": "Type of the action. Currently, only Delete is supported."
+            "description": "Type of the action. Currently, only Delete and SetStorageClass are supported."
            }
           }
          },
@@ -200,6 +236,13 @@
            "isLive": {
             "type": "boolean",
             "description": "Relevant only for versioned objects. If the value is true, this condition matches live objects; if the value is false, it matches archived objects."
+           },
+           "matchesStorageClass": {
+            "type": "array",
+            "description": "Objects having any of the storage classes specified by this condition will be matched. Values include MULTI_REGIONAL, REGIONAL, NEARLINE, COLDLINE, STANDARD, and DURABLE_REDUCED_AVAILABILITY.",
+            "items": {
+             "type": "string"
+            }
            },
            "numNewerVersions": {
             "type": "integer",
@@ -264,13 +307,33 @@
      "description": "The project number of the project the bucket belongs to.",
      "format": "uint64"
     },
+    "retentionPolicy": {
+     "type": "object",
+     "description": "Defines the retention policy for a bucket. The Retention policy enforces a minimum retention time for all objects contained in the bucket, based on their creation time. Any attempt to overwrite or delete objects younger than the retention period will result in a PERMISSION_DENIED error. An unlocked retention policy can be modified or removed from the bucket via the UpdateBucketMetadata RPC. A locked retention policy cannot be removed or shortened in duration for the lifetime of the bucket. Attempting to remove or decrease period of a locked retention policy will result in a PERMISSION_DENIED error.",
+     "properties": {
+      "effectiveTime": {
+       "type": "string",
+       "description": "The time from which policy was enforced and effective. RFC 3339 format.",
+       "format": "date-time"
+      },
+      "isLocked": {
+       "type": "boolean",
+       "description": "Once locked, an object retention policy cannot be modified."
+      },
+      "retentionPeriod": {
+       "type": "string",
+       "description": "Specifies the duration that objects need to be retained. Retention duration must be greater than zero and less than 100 years. Note that enforcement of retention periods less than a day is not guaranteed. Such periods should only be used for testing purposes.",
+       "format": "int64"
+      }
+     }
+    },
     "selfLink": {
      "type": "string",
      "description": "The URI of this bucket."
     },
     "storageClass": {
      "type": "string",
-     "description": "The bucket's storage class. This defines how objects in the bucket are stored and determines the SLA and the cost of storage. Values include STANDARD, NEARLINE and DURABLE_REDUCED_AVAILABILITY. Defaults to STANDARD. For more information, see storage classes."
+     "description": "The bucket's default storage class, used whenever no storageClass is specified for a newly-created object. This defines how objects in the bucket are stored and determines the SLA and the cost of storage. Values include MULTI_REGIONAL, REGIONAL, STANDARD, NEARLINE, COLDLINE, and DURABLE_REDUCED_AVAILABILITY. If this value is not specified when the bucket is created, it will default to STANDARD. For more information, see storage classes."
     },
     "timeCreated": {
      "type": "string",
@@ -294,15 +357,15 @@
     },
     "website": {
      "type": "object",
-     "description": "The bucket's website configuration.",
+     "description": "The bucket's website configuration, controlling how the service behaves when accessing bucket contents as a web site. See the Static Website Examples for more information.",
      "properties": {
       "mainPageSuffix": {
        "type": "string",
-       "description": "Behaves as the bucket's directory index where missing objects are treated as potential directories."
+       "description": "If the requested object path is missing, the service will ensure the path has a trailing '/', append this suffix, and attempt to retrieve the resulting object. This allows the creation of index.html objects to represent directory pages."
       },
       "notFoundPage": {
        "type": "string",
-       "description": "The custom object to return when a requested resource is not found."
+       "description": "If the requested object path is missing, and any mainPageSuffix object is missing, if applicable, the service will return the named object from this bucket as the content for a 404 Not Found result."
       }
      }
     }
@@ -361,13 +424,13 @@
       },
       "team": {
        "type": "string",
-       "description": "The team. Can be owners, editors, or viewers."
+       "description": "The team."
       }
      }
     },
     "role": {
      "type": "string",
-     "description": "The access permission for the entity. Can be READER, WRITER, or OWNER.",
+     "description": "The access permission for the entity.",
      "annotations": {
       "required": [
        "storage.bucketAccessControls.insert"
@@ -530,6 +593,86 @@
     }
    }
   },
+  "Notification": {
+   "id": "Notification",
+   "type": "object",
+   "description": "A subscription to receive Google PubSub notifications.",
+   "properties": {
+    "custom_attributes": {
+     "type": "object",
+     "description": "An optional list of additional attributes to attach to each Cloud PubSub message published for this notification subscription.",
+     "additionalProperties": {
+      "type": "string"
+     }
+    },
+    "etag": {
+     "type": "string",
+     "description": "HTTP 1.1 Entity tag for this subscription notification."
+    },
+    "event_types": {
+     "type": "array",
+     "description": "If present, only send notifications about listed event types. If empty, sent notifications for all event types.",
+     "items": {
+      "type": "string"
+     }
+    },
+    "id": {
+     "type": "string",
+     "description": "The ID of the notification."
+    },
+    "kind": {
+     "type": "string",
+     "description": "The kind of item this is. For notifications, this is always storage#notification.",
+     "default": "storage#notification"
+    },
+    "object_name_prefix": {
+     "type": "string",
+     "description": "If present, only apply this notification configuration to object names that begin with this prefix."
+    },
+    "payload_format": {
+     "type": "string",
+     "description": "The desired content of the Payload.",
+     "default": "JSON_API_V1",
+     "annotations": {
+      "required": [
+       "storage.notifications.insert"
+      ]
+     }
+    },
+    "selfLink": {
+     "type": "string",
+     "description": "The canonical URL of this notification."
+    },
+    "topic": {
+     "type": "string",
+     "description": "The Cloud PubSub topic to which this subscription publishes. Formatted as: '//pubsub.googleapis.com/projects/{project-identifier}/topics/{my-topic}'",
+     "annotations": {
+      "required": [
+       "storage.notifications.insert"
+      ]
+     }
+    }
+   }
+  },
+  "Notifications": {
+   "id": "Notifications",
+   "type": "object",
+   "description": "A list of notification subscriptions.",
+   "properties": {
+    "items": {
+     "type": "array",
+     "description": "The list of items.",
+     "items": {
+      "$ref": "Notification"
+     }
+    },
+    "kind": {
+     "type": "string",
+     "description": "The kind of item this is. For lists of notifications, this is always storage#notifications.",
+     "default": "storage#notifications"
+    }
+   }
+  },
   "Object": {
    "id": "Object",
    "type": "object",
@@ -553,7 +696,7 @@
     },
     "cacheControl": {
      "type": "string",
-     "description": "Cache-Control directive for the object data."
+     "description": "Cache-Control directive for the object data. If omitted, and the object is accessible to all anonymous users, the default will be public, max-age=3600."
     },
     "componentCount": {
      "type": "integer",
@@ -574,7 +717,7 @@
     },
     "contentType": {
      "type": "string",
-     "description": "Content-Type of the object data."
+     "description": "Content-Type of the object data. If an object is stored without a Content-Type, it is served as application/octet-stream."
     },
     "crc32c": {
      "type": "string",
@@ -598,6 +741,10 @@
      "type": "string",
      "description": "HTTP 1.1 Entity tag for the object."
     },
+    "eventBasedHold": {
+     "type": "boolean",
+     "description": "Defines the Event-Based hold for an object. Event-Based hold is a way to retain objects indefinitely until an event occurs, signified by the hold's release. After being released, such objects will be subject to bucket-level retention (if any). One sample use case of this flag is for banks to hold loan documents for at least 3 years after loan is paid in full. Here bucket-level retention is 3 years and the event is loan being paid in full. In this example these objects will be held intact for any number of years until the event has occurred (hold is released) and then 3 more years after that."
+    },
     "generation": {
      "type": "string",
      "description": "The content generation of this object. Used for object versioning.",
@@ -605,12 +752,16 @@
     },
     "id": {
      "type": "string",
-     "description": "The ID of the object."
+     "description": "The ID of the object, including the bucket name, object name, and generation number."
     },
     "kind": {
      "type": "string",
      "description": "The kind of item this is. For objects, this is always storage#object.",
      "default": "storage#object"
+    },
+    "kmsKeyName": {
+     "type": "string",
+     "description": "Cloud KMS Key used to encrypt this object, if the object is encrypted by such a key. Limited availability; usable only by enabled projects."
     },
     "md5Hash": {
      "type": "string",
@@ -635,7 +786,7 @@
     },
     "name": {
      "type": "string",
-     "description": "The name of this object. Required if not specified by URL parameter."
+     "description": "The name of the object. Required if not specified by URL parameter."
     },
     "owner": {
      "type": "object",
@@ -651,6 +802,11 @@
       }
      }
     },
+    "retentionExpirationTime": {
+     "type": "string",
+     "description": "Specifies the earliest time that the object's retention period expires. This value is server-determined and is in RFC 3339 format. Note 1: This field is not provided for objects with an active Event-Based hold, since retention expiration is unknown until the hold is removed. Note 2: This value can be provided even when TemporaryHold is set (so that the user can reason about policy without having to first unset the TemporaryHold).",
+     "format": "date-time"
+    },
     "selfLink": {
      "type": "string",
      "description": "The link to this object."
@@ -664,6 +820,10 @@
      "type": "string",
      "description": "Storage class of the object."
     },
+    "temporaryHold": {
+     "type": "boolean",
+     "description": "Defines the temporary hold for an object. This flag is used to enforce a temporary hold on an object. While it is set to true, the object is protected against deletion and overwrites. A common use case of this flag is regulatory investigations where objects need to be retained while the investigation is ongoing."
+    },
     "timeCreated": {
      "type": "string",
      "description": "The creation time of the object in RFC 3339 format.",
@@ -672,6 +832,11 @@
     "timeDeleted": {
      "type": "string",
      "description": "The deletion time of the object in RFC 3339 format. Will be returned if and only if this version of the object has been deleted.",
+     "format": "date-time"
+    },
+    "timeStorageClassUpdated": {
+     "type": "string",
+     "description": "The time at which the object's storage class was last changed. When the object is initially created, it will be set to timeCreated.",
      "format": "date-time"
     },
     "updated": {
@@ -700,7 +865,13 @@
     },
     "entity": {
      "type": "string",
-     "description": "The entity holding the permission, in one of the following forms: \n- user-userId \n- user-email \n- group-groupId \n- group-email \n- domain-domain \n- project-team-projectId \n- allUsers \n- allAuthenticatedUsers Examples: \n- The user liz@example.com would be user-liz@example.com. \n- The group example@googlegroups.com would be group-example@googlegroups.com. \n- To refer to all members of the Google Apps for Business domain example.com, the entity would be domain-example.com."
+     "description": "The entity holding the permission, in one of the following forms: \n- user-userId \n- user-email \n- group-groupId \n- group-email \n- domain-domain \n- project-team-projectId \n- allUsers \n- allAuthenticatedUsers Examples: \n- The user liz@example.com would be user-liz@example.com. \n- The group example@googlegroups.com would be group-example@googlegroups.com. \n- To refer to all members of the Google Apps for Business domain example.com, the entity would be domain-example.com.",
+     "annotations": {
+      "required": [
+       "storage.defaultObjectAccessControls.insert",
+       "storage.objectAccessControls.insert"
+      ]
+     }
     },
     "entityId": {
      "type": "string",
@@ -712,7 +883,7 @@
     },
     "generation": {
      "type": "string",
-     "description": "The content generation of the object.",
+     "description": "The content generation of the object, if applied to an object.",
      "format": "int64"
     },
     "id": {
@@ -726,7 +897,7 @@
     },
     "object": {
      "type": "string",
-     "description": "The name of the object."
+     "description": "The name of the object, if applied to an object."
     },
     "projectTeam": {
      "type": "object",
@@ -738,13 +909,19 @@
       },
       "team": {
        "type": "string",
-       "description": "The team. Can be owners, editors, or viewers."
+       "description": "The team."
       }
      }
     },
     "role": {
      "type": "string",
-     "description": "The access permission for the entity. Can be READER or OWNER."
+     "description": "The access permission for the entity.",
+     "annotations": {
+      "required": [
+       "storage.defaultObjectAccessControls.insert",
+       "storage.objectAccessControls.insert"
+      ]
+     }
     },
     "selfLink": {
      "type": "string",
@@ -761,7 +938,7 @@
      "type": "array",
      "description": "The list of items.",
      "items": {
-      "type": "any"
+      "$ref": "ObjectAccessControl"
      }
     },
     "kind": {
@@ -801,6 +978,68 @@
     }
    }
   },
+  "Policy": {
+   "id": "Policy",
+   "type": "object",
+   "description": "A bucket/object IAM policy.",
+   "properties": {
+    "bindings": {
+     "type": "array",
+     "description": "An association between a role, which comes with a set of permissions, and members who may assume that role.",
+     "items": {
+      "type": "object",
+      "properties": {
+       "condition": {
+        "type": "any"
+       },
+       "members": {
+        "type": "array",
+        "description": "A collection of identifiers for members who may assume the provided role. Recognized identifiers are as follows:  \n- allUsers — A special identifier that represents anyone on the internet; with or without a Google account.  \n- allAuthenticatedUsers — A special identifier that represents anyone who is authenticated with a Google account or a service account.  \n- user:emailid — An email address that represents a specific account. For example, user:alice@gmail.com or user:joe@example.com.  \n- serviceAccount:emailid — An email address that represents a service account. For example,  serviceAccount:my-other-app@appspot.gserviceaccount.com .  \n- group:emailid — An email address that represents a Google group. For example, group:admins@example.com.  \n- domain:domain — A Google Apps domain name that represents all the users of that domain. For example, domain:google.com or domain:example.com.  \n- projectOwner:projectid — Owners of the given project. For example, projectOwner:my-example-project  \n- projectEditor:projectid — Editors of the given project. For example, projectEditor:my-example-project  \n- projectViewer:projectid — Viewers of the given project. For example, projectViewer:my-example-project",
+        "items": {
+         "type": "string"
+        },
+        "annotations": {
+         "required": [
+          "storage.buckets.setIamPolicy",
+          "storage.objects.setIamPolicy"
+         ]
+        }
+       },
+       "role": {
+        "type": "string",
+        "description": "The role to which members belong. Two types of roles are supported: new IAM roles, which grant permissions that do not map directly to those provided by ACLs, and legacy IAM roles, which do map directly to ACL permissions. All roles are of the format roles/storage.specificRole.\nThe new IAM roles are:  \n- roles/storage.admin — Full control of Google Cloud Storage resources.  \n- roles/storage.objectViewer — Read-Only access to Google Cloud Storage objects.  \n- roles/storage.objectCreator — Access to create objects in Google Cloud Storage.  \n- roles/storage.objectAdmin — Full control of Google Cloud Storage objects.   The legacy IAM roles are:  \n- roles/storage.legacyObjectReader — Read-only access to objects without listing. Equivalent to an ACL entry on an object with the READER role.  \n- roles/storage.legacyObjectOwner — Read/write access to existing objects without listing. Equivalent to an ACL entry on an object with the OWNER role.  \n- roles/storage.legacyBucketReader — Read access to buckets with object listing. Equivalent to an ACL entry on a bucket with the READER role.  \n- roles/storage.legacyBucketWriter — Read access to buckets with object listing/creation/deletion. Equivalent to an ACL entry on a bucket with the WRITER role.  \n- roles/storage.legacyBucketOwner — Read and write access to existing buckets with object listing/creation/deletion. Equivalent to an ACL entry on a bucket with the OWNER role.",
+        "annotations": {
+         "required": [
+          "storage.buckets.setIamPolicy",
+          "storage.objects.setIamPolicy"
+         ]
+        }
+       }
+      }
+     },
+     "annotations": {
+      "required": [
+       "storage.buckets.setIamPolicy",
+       "storage.objects.setIamPolicy"
+      ]
+     }
+    },
+    "etag": {
+     "type": "string",
+     "description": "HTTP 1.1  Entity tag for the policy.",
+     "format": "byte"
+    },
+    "kind": {
+     "type": "string",
+     "description": "The kind of item this is. For policies, this is always storage#policy. This field is ignored on input.",
+     "default": "storage#policy"
+    },
+    "resourceId": {
+     "type": "string",
+     "description": "The ID of the resource to which this policy belongs. Will be of the form projects/_/buckets/bucket for buckets, and projects/_/buckets/bucket/objects/object for objects. A specific generation may be specified by appending #generationNumber to the end of the object name, e.g. projects/_/buckets/my-bucket/objects/data.txt#17. The current generation can be denoted with #0. This field is ignored on input."
+    }
+   }
+  },
   "RewriteResponse": {
    "id": "RewriteResponse",
    "type": "object",
@@ -818,7 +1057,7 @@
     "objectSize": {
      "type": "string",
      "description": "The total size of the object being copied in bytes. This property is always present in the response.",
-     "format": "uint64"
+     "format": "int64"
     },
     "resource": {
      "$ref": "Object",
@@ -831,7 +1070,42 @@
     "totalBytesRewritten": {
      "type": "string",
      "description": "The total bytes written so far, which can be used to provide a waiting user with a progress indicator. This property is always present in the response.",
-     "format": "uint64"
+     "format": "int64"
+    }
+   }
+  },
+  "ServiceAccount": {
+   "id": "ServiceAccount",
+   "type": "object",
+   "description": "A subscription to receive Google PubSub notifications.",
+   "properties": {
+    "email_address": {
+     "type": "string",
+     "description": "The ID of the notification."
+    },
+    "kind": {
+     "type": "string",
+     "description": "The kind of item this is. For notifications, this is always storage#notification.",
+     "default": "storage#serviceAccount"
+    }
+   }
+  },
+  "TestIamPermissionsResponse": {
+   "id": "TestIamPermissionsResponse",
+   "type": "object",
+   "description": "A storage.(buckets|objects).testIamPermissions response.",
+   "properties": {
+    "kind": {
+     "type": "string",
+     "description": "The kind of item this is.",
+     "default": "storage#testIamPermissionsResponse"
+    },
+    "permissions": {
+     "type": "array",
+     "description": "The permissions held by the caller. Permissions are always of the format storage.resource.capability, where resource is one of buckets or objects. The supported permissions are as follows:  \n- storage.buckets.delete — Delete bucket.  \n- storage.buckets.get — Read bucket metadata.  \n- storage.buckets.getIamPolicy — Read bucket IAM policy.  \n- storage.buckets.create — Create bucket.  \n- storage.buckets.list — List buckets.  \n- storage.buckets.setIamPolicy — Update bucket IAM policy.  \n- storage.buckets.update — Update bucket metadata.  \n- storage.objects.delete — Delete object.  \n- storage.objects.get — Read object data and metadata.  \n- storage.objects.getIamPolicy — Read object IAM policy.  \n- storage.objects.create — Create object.  \n- storage.objects.list — List objects.  \n- storage.objects.setIamPolicy — Update object IAM policy.  \n- storage.objects.update — Update object metadata.",
+     "items": {
+      "type": "string"
+     }
     }
    }
   }
@@ -856,6 +1130,11 @@
        "description": "The entity holding the permission. Can be user-userId, user-emailAddress, group-groupId, group-emailAddress, allUsers, or allAuthenticatedUsers.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -884,6 +1163,11 @@
        "description": "The entity holding the permission. Can be user-userId, user-emailAddress, group-groupId, group-emailAddress, allUsers, or allAuthenticatedUsers.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -909,6 +1193,11 @@
        "description": "Name of a bucket.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -936,6 +1225,11 @@
        "description": "Name of a bucket.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -966,6 +1260,11 @@
        "description": "The entity holding the permission. Can be user-userId, user-emailAddress, group-groupId, group-emailAddress, allUsers, or allAuthenticatedUsers.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -1000,6 +1299,11 @@
        "description": "The entity holding the permission. Can be user-userId, user-emailAddress, group-groupId, group-emailAddress, allUsers, or allAuthenticatedUsers.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -1043,6 +1347,11 @@
        "type": "string",
        "description": "If set, only deletes the bucket if its metageneration does not match this value.",
        "format": "int64",
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
        "location": "query"
       }
      },
@@ -1088,8 +1397,13 @@
        ],
        "enumDescriptions": [
         "Include all properties.",
-        "Omit acl and defaultObjectAcl properties."
+        "Omit owner, acl and defaultObjectAcl properties."
        ],
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
        "location": "query"
       }
      },
@@ -1098,6 +1412,38 @@
      ],
      "response": {
       "$ref": "Bucket"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/cloud-platform.read-only",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
+    "getIamPolicy": {
+     "id": "storage.buckets.getIamPolicy",
+     "path": "b/{bucket}/iam",
+     "httpMethod": "GET",
+     "description": "Returns an IAM policy for the specified bucket.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of a bucket.",
+       "required": true,
+       "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket"
+     ],
+     "response": {
+      "$ref": "Policy"
      },
      "scopes": [
       "https://www.googleapis.com/auth/cloud-platform",
@@ -1168,8 +1514,13 @@
        ],
        "enumDescriptions": [
         "Include all properties.",
-        "Omit acl and defaultObjectAcl properties."
+        "Omit owner, acl and defaultObjectAcl properties."
        ],
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request.",
        "location": "query"
       }
      },
@@ -1196,7 +1547,8 @@
      "parameters": {
       "maxResults": {
        "type": "integer",
-       "description": "Maximum number of buckets to return.",
+       "description": "Maximum number of buckets to return in a single response. The service will use this parameter or 1,000 items, whichever is smaller.",
+       "default": "1000",
        "format": "uint32",
        "minimum": "0",
        "location": "query"
@@ -1226,8 +1578,13 @@
        ],
        "enumDescriptions": [
         "Include all properties.",
-        "Omit acl and defaultObjectAcl properties."
+        "Omit owner, acl and defaultObjectAcl properties."
        ],
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request.",
        "location": "query"
       }
      },
@@ -1245,11 +1602,11 @@
       "https://www.googleapis.com/auth/devstorage.read_write"
      ]
     },
-    "patch": {
-     "id": "storage.buckets.patch",
-     "path": "b/{bucket}",
-     "httpMethod": "PATCH",
-     "description": "Updates a bucket. This method supports patch semantics.",
+    "lockRetentionPolicy": {
+     "id": "storage.buckets.lockRetentionPolicy",
+     "path": "b/{bucket}/lockRetentionPolicy",
+     "httpMethod": "POST",
+     "description": "Locks retention policy on a bucket.",
      "parameters": {
       "bucket": {
        "type": "string",
@@ -1259,76 +1616,21 @@
       },
       "ifMetagenerationMatch": {
        "type": "string",
-       "description": "Makes the return of the bucket metadata conditional on whether the bucket's current metageneration matches the given value.",
+       "description": "Makes the operation conditional on whether bucket's current metageneration matches the given value.",
+       "required": true,
        "format": "int64",
        "location": "query"
       },
-      "ifMetagenerationNotMatch": {
+      "userProject": {
        "type": "string",
-       "description": "Makes the return of the bucket metadata conditional on whether the bucket's current metageneration does not match the given value.",
-       "format": "int64",
-       "location": "query"
-      },
-      "predefinedAcl": {
-       "type": "string",
-       "description": "Apply a predefined set of access controls to this bucket.",
-       "enum": [
-        "authenticatedRead",
-        "private",
-        "projectPrivate",
-        "publicRead",
-        "publicReadWrite"
-       ],
-       "enumDescriptions": [
-        "Project team owners get OWNER access, and allAuthenticatedUsers get READER access.",
-        "Project team owners get OWNER access.",
-        "Project team members get access according to their roles.",
-        "Project team owners get OWNER access, and allUsers get READER access.",
-        "Project team owners get OWNER access, and allUsers get WRITER access."
-       ],
-       "location": "query"
-      },
-      "predefinedDefaultObjectAcl": {
-       "type": "string",
-       "description": "Apply a predefined set of default object access controls to this bucket.",
-       "enum": [
-        "authenticatedRead",
-        "bucketOwnerFullControl",
-        "bucketOwnerRead",
-        "private",
-        "projectPrivate",
-        "publicRead"
-       ],
-       "enumDescriptions": [
-        "Object owner gets OWNER access, and allAuthenticatedUsers get READER access.",
-        "Object owner gets OWNER access, and project team owners get OWNER access.",
-        "Object owner gets OWNER access, and project team owners get READER access.",
-        "Object owner gets OWNER access.",
-        "Object owner gets OWNER access, and project team members get access according to their roles.",
-        "Object owner gets OWNER access, and allUsers get READER access."
-       ],
-       "location": "query"
-      },
-      "projection": {
-       "type": "string",
-       "description": "Set of properties to return. Defaults to full.",
-       "enum": [
-        "full",
-        "noAcl"
-       ],
-       "enumDescriptions": [
-        "Include all properties.",
-        "Omit acl and defaultObjectAcl properties."
-       ],
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
        "location": "query"
       }
      },
      "parameterOrder": [
-      "bucket"
+      "bucket",
+      "ifMetagenerationMatch"
      ],
-     "request": {
-      "$ref": "Bucket"
-     },
      "response": {
       "$ref": "Bucket"
      },
@@ -1338,11 +1640,11 @@
       "https://www.googleapis.com/auth/devstorage.read_write"
      ]
     },
-    "update": {
-     "id": "storage.buckets.update",
+    "patch": {
+     "id": "storage.buckets.patch",
      "path": "b/{bucket}",
-     "httpMethod": "PUT",
-     "description": "Updates a bucket.",
+     "httpMethod": "PATCH",
+     "description": "Updates a bucket. Changes to the bucket will be readable immediately after writing, but configuration changes may take time to propagate. This method supports patch semantics.",
      "parameters": {
       "bucket": {
        "type": "string",
@@ -1411,8 +1713,13 @@
        ],
        "enumDescriptions": [
         "Include all properties.",
-        "Omit acl and defaultObjectAcl properties."
+        "Omit owner, acl and defaultObjectAcl properties."
        ],
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
        "location": "query"
       }
      },
@@ -1427,8 +1734,177 @@
      },
      "scopes": [
       "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/devstorage.full_control"
+     ]
+    },
+    "setIamPolicy": {
+     "id": "storage.buckets.setIamPolicy",
+     "path": "b/{bucket}/iam",
+     "httpMethod": "PUT",
+     "description": "Updates an IAM policy for the specified bucket.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of a bucket.",
+       "required": true,
+       "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket"
+     ],
+     "request": {
+      "$ref": "Policy"
+     },
+     "response": {
+      "$ref": "Policy"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
       "https://www.googleapis.com/auth/devstorage.full_control",
       "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
+    "testIamPermissions": {
+     "id": "storage.buckets.testIamPermissions",
+     "path": "b/{bucket}/iam/testPermissions",
+     "httpMethod": "GET",
+     "description": "Tests a set of permissions on the given bucket to see which, if any, are held by the caller.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of a bucket.",
+       "required": true,
+       "location": "path"
+      },
+      "permissions": {
+       "type": "string",
+       "description": "Permissions to test.",
+       "required": true,
+       "repeated": true,
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket",
+      "permissions"
+     ],
+     "response": {
+      "$ref": "TestIamPermissionsResponse"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/cloud-platform.read-only",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
+    "update": {
+     "id": "storage.buckets.update",
+     "path": "b/{bucket}",
+     "httpMethod": "PUT",
+     "description": "Updates a bucket. Changes to the bucket will be readable immediately after writing, but configuration changes may take time to propagate.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of a bucket.",
+       "required": true,
+       "location": "path"
+      },
+      "ifMetagenerationMatch": {
+       "type": "string",
+       "description": "Makes the return of the bucket metadata conditional on whether the bucket's current metageneration matches the given value.",
+       "format": "int64",
+       "location": "query"
+      },
+      "ifMetagenerationNotMatch": {
+       "type": "string",
+       "description": "Makes the return of the bucket metadata conditional on whether the bucket's current metageneration does not match the given value.",
+       "format": "int64",
+       "location": "query"
+      },
+      "predefinedAcl": {
+       "type": "string",
+       "description": "Apply a predefined set of access controls to this bucket.",
+       "enum": [
+        "authenticatedRead",
+        "private",
+        "projectPrivate",
+        "publicRead",
+        "publicReadWrite"
+       ],
+       "enumDescriptions": [
+        "Project team owners get OWNER access, and allAuthenticatedUsers get READER access.",
+        "Project team owners get OWNER access.",
+        "Project team members get access according to their roles.",
+        "Project team owners get OWNER access, and allUsers get READER access.",
+        "Project team owners get OWNER access, and allUsers get WRITER access."
+       ],
+       "location": "query"
+      },
+      "predefinedDefaultObjectAcl": {
+       "type": "string",
+       "description": "Apply a predefined set of default object access controls to this bucket.",
+       "enum": [
+        "authenticatedRead",
+        "bucketOwnerFullControl",
+        "bucketOwnerRead",
+        "private",
+        "projectPrivate",
+        "publicRead"
+       ],
+       "enumDescriptions": [
+        "Object owner gets OWNER access, and allAuthenticatedUsers get READER access.",
+        "Object owner gets OWNER access, and project team owners get OWNER access.",
+        "Object owner gets OWNER access, and project team owners get READER access.",
+        "Object owner gets OWNER access.",
+        "Object owner gets OWNER access, and project team members get access according to their roles.",
+        "Object owner gets OWNER access, and allUsers get READER access."
+       ],
+       "location": "query"
+      },
+      "projection": {
+       "type": "string",
+       "description": "Set of properties to return. Defaults to full.",
+       "enum": [
+        "full",
+        "noAcl"
+       ],
+       "enumDescriptions": [
+        "Include all properties.",
+        "Omit owner, acl and defaultObjectAcl properties."
+       ],
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket"
+     ],
+     "request": {
+      "$ref": "Bucket"
+     },
+     "response": {
+      "$ref": "Bucket"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/devstorage.full_control"
      ]
     }
    }
@@ -1473,6 +1949,11 @@
        "description": "The entity holding the permission. Can be user-userId, user-emailAddress, group-groupId, group-emailAddress, allUsers, or allAuthenticatedUsers.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -1501,6 +1982,11 @@
        "description": "The entity holding the permission. Can be user-userId, user-emailAddress, group-groupId, group-emailAddress, allUsers, or allAuthenticatedUsers.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -1526,6 +2012,11 @@
        "description": "Name of a bucket.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -1565,6 +2056,11 @@
        "description": "If present, only return default ACL listing if the bucket's current metageneration does not match the given value.",
        "format": "int64",
        "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -1595,6 +2091,11 @@
        "description": "The entity holding the permission. Can be user-userId, user-emailAddress, group-groupId, group-emailAddress, allUsers, or allAuthenticatedUsers.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -1629,6 +2130,11 @@
        "description": "The entity holding the permission. Can be user-userId, user-emailAddress, group-groupId, group-emailAddress, allUsers, or allAuthenticatedUsers.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -1644,6 +2150,148 @@
      "scopes": [
       "https://www.googleapis.com/auth/cloud-platform",
       "https://www.googleapis.com/auth/devstorage.full_control"
+     ]
+    }
+   }
+  },
+  "notifications": {
+   "methods": {
+    "delete": {
+     "id": "storage.notifications.delete",
+     "path": "b/{bucket}/notificationConfigs/{notification}",
+     "httpMethod": "DELETE",
+     "description": "Permanently deletes a notification subscription.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "The parent bucket of the notification.",
+       "required": true,
+       "location": "path"
+      },
+      "notification": {
+       "type": "string",
+       "description": "ID of the notification to delete.",
+       "required": true,
+       "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket",
+      "notification"
+     ],
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
+    "get": {
+     "id": "storage.notifications.get",
+     "path": "b/{bucket}/notificationConfigs/{notification}",
+     "httpMethod": "GET",
+     "description": "View a notification configuration.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "The parent bucket of the notification.",
+       "required": true,
+       "location": "path"
+      },
+      "notification": {
+       "type": "string",
+       "description": "Notification ID",
+       "required": true,
+       "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket",
+      "notification"
+     ],
+     "response": {
+      "$ref": "Notification"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/cloud-platform.read-only",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
+    "insert": {
+     "id": "storage.notifications.insert",
+     "path": "b/{bucket}/notificationConfigs",
+     "httpMethod": "POST",
+     "description": "Creates a notification subscription for a given bucket.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "The parent bucket of the notification.",
+       "required": true,
+       "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket"
+     ],
+     "request": {
+      "$ref": "Notification"
+     },
+     "response": {
+      "$ref": "Notification"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
+    "list": {
+     "id": "storage.notifications.list",
+     "path": "b/{bucket}/notificationConfigs",
+     "httpMethod": "GET",
+     "description": "Retrieves a list of notification subscriptions for a given bucket.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of a Google Cloud Storage bucket.",
+       "required": true,
+       "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket"
+     ],
+     "response": {
+      "$ref": "Notifications"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/cloud-platform.read-only",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/devstorage.read_write"
      ]
     }
    }
@@ -1679,6 +2327,11 @@
        "description": "Name of the object. For information about how to URL encode object names to be path safe, see Encoding URI Path Parts.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -1720,6 +2373,11 @@
        "description": "Name of the object. For information about how to URL encode object names to be path safe, see Encoding URI Path Parts.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -1758,6 +2416,11 @@
        "description": "Name of the object. For information about how to URL encode object names to be path safe, see Encoding URI Path Parts.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -1798,6 +2461,11 @@
        "description": "Name of the object. For information about how to URL encode object names to be path safe, see Encoding URI Path Parts.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -1841,6 +2509,11 @@
        "description": "Name of the object. For information about how to URL encode object names to be path safe, see Encoding URI Path Parts.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -1888,6 +2561,11 @@
        "description": "Name of the object. For information about how to URL encode object names to be path safe, see Encoding URI Path Parts.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -1951,7 +2629,7 @@
       },
       "ifGenerationMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the object's current generation matches the given value.",
+       "description": "Makes the operation conditional on whether the object's current generation matches the given value. Setting to 0 makes the operation succeed only if there are no live versions of the object.",
        "format": "int64",
        "location": "query"
       },
@@ -1959,6 +2637,16 @@
        "type": "string",
        "description": "Makes the operation conditional on whether the object's current metageneration matches the given value.",
        "format": "int64",
+       "location": "query"
+      },
+      "kmsKeyName": {
+       "type": "string",
+       "description": "Resource name of the Cloud KMS key, of the form projects/my-project/locations/global/keyRings/my-kr/cryptoKeys/my-key, that will be used to encrypt the object. Overrides the object metadata's kms_key_name value, if any.",
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
        "location": "query"
       }
      },
@@ -1976,9 +2664,7 @@
       "https://www.googleapis.com/auth/cloud-platform",
       "https://www.googleapis.com/auth/devstorage.full_control",
       "https://www.googleapis.com/auth/devstorage.read_write"
-     ],
-     "supportsMediaDownload": true,
-     "useMediaDownloadService": true
+     ]
     },
     "copy": {
      "id": "storage.objects.copy",
@@ -2021,13 +2707,13 @@
       },
       "ifGenerationMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the destination object's current generation matches the given value.",
+       "description": "Makes the operation conditional on whether the destination object's current generation matches the given value. Setting to 0 makes the operation succeed only if there are no live versions of the object.",
        "format": "int64",
        "location": "query"
       },
       "ifGenerationNotMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the destination object's current generation does not match the given value.",
+       "description": "Makes the operation conditional on whether the destination object's current generation does not match the given value. If no live object exists, the precondition fails. Setting to 0 makes the operation succeed only if there is a live version of the object.",
        "format": "int64",
        "location": "query"
       },
@@ -2045,13 +2731,13 @@
       },
       "ifSourceGenerationMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the source object's generation matches the given value.",
+       "description": "Makes the operation conditional on whether the source object's current generation matches the given value.",
        "format": "int64",
        "location": "query"
       },
       "ifSourceGenerationNotMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the source object's generation does not match the given value.",
+       "description": "Makes the operation conditional on whether the source object's current generation does not match the given value.",
        "format": "int64",
        "location": "query"
       },
@@ -2076,7 +2762,7 @@
        ],
        "enumDescriptions": [
         "Include all properties.",
-        "Omit the acl property."
+        "Omit the owner, acl property."
        ],
        "location": "query"
       },
@@ -2097,6 +2783,11 @@
        "description": "Name of the source object. For information about how to URL encode object names to be path safe, see Encoding URI Path Parts.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -2115,9 +2806,7 @@
       "https://www.googleapis.com/auth/cloud-platform",
       "https://www.googleapis.com/auth/devstorage.full_control",
       "https://www.googleapis.com/auth/devstorage.read_write"
-     ],
-     "supportsMediaDownload": true,
-     "useMediaDownloadService": true
+     ]
     },
     "delete": {
      "id": "storage.objects.delete",
@@ -2139,13 +2828,13 @@
       },
       "ifGenerationMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the object's current generation matches the given value.",
+       "description": "Makes the operation conditional on whether the object's current generation matches the given value. Setting to 0 makes the operation succeed only if there are no live versions of the object.",
        "format": "int64",
        "location": "query"
       },
       "ifGenerationNotMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the object's current generation does not match the given value.",
+       "description": "Makes the operation conditional on whether the object's current generation does not match the given value. If no live object exists, the precondition fails. Setting to 0 makes the operation succeed only if there is a live version of the object.",
        "format": "int64",
        "location": "query"
       },
@@ -2166,6 +2855,11 @@
        "description": "Name of the object. For information about how to URL encode object names to be path safe, see Encoding URI Path Parts.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -2198,13 +2892,13 @@
       },
       "ifGenerationMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the object's generation matches the given value.",
+       "description": "Makes the operation conditional on whether the object's current generation matches the given value. Setting to 0 makes the operation succeed only if there are no live versions of the object.",
        "format": "int64",
        "location": "query"
       },
       "ifGenerationNotMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the object's generation does not match the given value.",
+       "description": "Makes the operation conditional on whether the object's current generation does not match the given value. If no live object exists, the precondition fails. Setting to 0 makes the operation succeed only if there is a live version of the object.",
        "format": "int64",
        "location": "query"
       },
@@ -2235,8 +2929,13 @@
        ],
        "enumDescriptions": [
         "Include all properties.",
-        "Omit the acl property."
+        "Omit the owner, acl property."
        ],
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
        "location": "query"
       }
      },
@@ -2257,6 +2956,51 @@
      "supportsMediaDownload": true,
      "useMediaDownloadService": true
     },
+    "getIamPolicy": {
+     "id": "storage.objects.getIamPolicy",
+     "path": "b/{bucket}/o/{object}/iam",
+     "httpMethod": "GET",
+     "description": "Returns an IAM policy for the specified object.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of the bucket in which the object resides.",
+       "required": true,
+       "location": "path"
+      },
+      "generation": {
+       "type": "string",
+       "description": "If present, selects a specific revision of this object (as opposed to the latest version, the default).",
+       "format": "int64",
+       "location": "query"
+      },
+      "object": {
+       "type": "string",
+       "description": "Name of the object. For information about how to URL encode object names to be path safe, see Encoding URI Path Parts.",
+       "required": true,
+       "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket",
+      "object"
+     ],
+     "response": {
+      "$ref": "Policy"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/cloud-platform.read-only",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_only",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
     "insert": {
      "id": "storage.objects.insert",
      "path": "b/{bucket}/o",
@@ -2276,13 +3020,13 @@
       },
       "ifGenerationMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the object's current generation matches the given value.",
+       "description": "Makes the operation conditional on whether the object's current generation matches the given value. Setting to 0 makes the operation succeed only if there are no live versions of the object.",
        "format": "int64",
        "location": "query"
       },
       "ifGenerationNotMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the object's current generation does not match the given value.",
+       "description": "Makes the operation conditional on whether the object's current generation does not match the given value. If no live object exists, the precondition fails. Setting to 0 makes the operation succeed only if there is a live version of the object.",
        "format": "int64",
        "location": "query"
       },
@@ -2296,6 +3040,11 @@
        "type": "string",
        "description": "Makes the operation conditional on whether the object's current metageneration does not match the given value.",
        "format": "int64",
+       "location": "query"
+      },
+      "kmsKeyName": {
+       "type": "string",
+       "description": "Resource name of the Cloud KMS key, of the form projects/my-project/locations/global/keyRings/my-kr/cryptoKeys/my-key, that will be used to encrypt the object. Overrides the object metadata's kms_key_name value, if any. Limited availability; usable only by enabled projects.",
        "location": "query"
       },
       "name": {
@@ -2333,8 +3082,13 @@
        ],
        "enumDescriptions": [
         "Include all properties.",
-        "Omit the acl property."
+        "Omit the owner, acl property."
        ],
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
        "location": "query"
       }
      },
@@ -2352,8 +3106,6 @@
       "https://www.googleapis.com/auth/devstorage.full_control",
       "https://www.googleapis.com/auth/devstorage.read_write"
      ],
-     "supportsMediaDownload": true,
-     "useMediaDownloadService": true,
      "supportsMediaUpload": true,
      "mediaUpload": {
       "accept": [
@@ -2390,7 +3142,8 @@
       },
       "maxResults": {
        "type": "integer",
-       "description": "Maximum number of items plus prefixes to return. As duplicate prefixes are omitted, fewer total results may be returned than requested. The default value of this parameter is 1,000 items.",
+       "description": "Maximum number of items plus prefixes to return in a single page of responses. As duplicate prefixes are omitted, fewer total results may be returned than requested. The service will use this parameter or 1,000 items, whichever is smaller.",
+       "default": "1000",
        "format": "uint32",
        "minimum": "0",
        "location": "query"
@@ -2414,8 +3167,13 @@
        ],
        "enumDescriptions": [
         "Include all properties.",
-        "Omit the acl property."
+        "Omit the owner, acl property."
        ],
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
        "location": "query"
       },
       "versions": {
@@ -2443,7 +3201,7 @@
      "id": "storage.objects.patch",
      "path": "b/{bucket}/o/{object}",
      "httpMethod": "PATCH",
-     "description": "Updates an object's metadata. This method supports patch semantics.",
+     "description": "Patches an object's metadata.",
      "parameters": {
       "bucket": {
        "type": "string",
@@ -2459,13 +3217,13 @@
       },
       "ifGenerationMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the object's current generation matches the given value.",
+       "description": "Makes the operation conditional on whether the object's current generation matches the given value. Setting to 0 makes the operation succeed only if there are no live versions of the object.",
        "format": "int64",
        "location": "query"
       },
       "ifGenerationNotMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the object's current generation does not match the given value.",
+       "description": "Makes the operation conditional on whether the object's current generation does not match the given value. If no live object exists, the precondition fails. Setting to 0 makes the operation succeed only if there is a live version of the object.",
        "format": "int64",
        "location": "query"
       },
@@ -2517,8 +3275,13 @@
        ],
        "enumDescriptions": [
         "Include all properties.",
-        "Omit the acl property."
+        "Omit the owner, acl property."
        ],
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request, for Requester Pays buckets.",
        "location": "query"
       }
      },
@@ -2534,8 +3297,7 @@
      },
      "scopes": [
       "https://www.googleapis.com/auth/cloud-platform",
-      "https://www.googleapis.com/auth/devstorage.full_control",
-      "https://www.googleapis.com/auth/devstorage.read_write"
+      "https://www.googleapis.com/auth/devstorage.full_control"
      ]
     },
     "rewrite": {
@@ -2549,6 +3311,11 @@
        "description": "Name of the bucket in which to store the new object. Overrides the provided object metadata's bucket value, if any.",
        "required": true,
        "location": "path"
+      },
+      "destinationKmsKeyName": {
+       "type": "string",
+       "description": "Resource name of the Cloud KMS key, of the form projects/my-project/locations/global/keyRings/my-kr/cryptoKeys/my-key, that will be used to encrypt the object. Overrides the object metadata's kms_key_name value, if any.",
+       "location": "query"
       },
       "destinationObject": {
        "type": "string",
@@ -2579,13 +3346,13 @@
       },
       "ifGenerationMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the destination object's current generation matches the given value.",
+       "description": "Makes the operation conditional on whether the object's current generation matches the given value. Setting to 0 makes the operation succeed only if there are no live versions of the object.",
        "format": "int64",
        "location": "query"
       },
       "ifGenerationNotMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the destination object's current generation does not match the given value.",
+       "description": "Makes the operation conditional on whether the object's current generation does not match the given value. If no live object exists, the precondition fails. Setting to 0 makes the operation succeed only if there is a live version of the object.",
        "format": "int64",
        "location": "query"
       },
@@ -2603,13 +3370,13 @@
       },
       "ifSourceGenerationMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the source object's generation matches the given value.",
+       "description": "Makes the operation conditional on whether the source object's current generation matches the given value.",
        "format": "int64",
        "location": "query"
       },
       "ifSourceGenerationNotMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the source object's generation does not match the given value.",
+       "description": "Makes the operation conditional on whether the source object's current generation does not match the given value.",
        "format": "int64",
        "location": "query"
       },
@@ -2640,7 +3407,7 @@
        ],
        "enumDescriptions": [
         "Include all properties.",
-        "Omit the acl property."
+        "Omit the owner, acl property."
        ],
        "location": "query"
       },
@@ -2666,6 +3433,11 @@
        "description": "Name of the source object. For information about how to URL encode object names to be path safe, see Encoding URI Path Parts.",
        "required": true,
        "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
       }
      },
      "parameterOrder": [
@@ -2683,6 +3455,105 @@
      "scopes": [
       "https://www.googleapis.com/auth/cloud-platform",
       "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
+    "setIamPolicy": {
+     "id": "storage.objects.setIamPolicy",
+     "path": "b/{bucket}/o/{object}/iam",
+     "httpMethod": "PUT",
+     "description": "Updates an IAM policy for the specified object.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of the bucket in which the object resides.",
+       "required": true,
+       "location": "path"
+      },
+      "generation": {
+       "type": "string",
+       "description": "If present, selects a specific revision of this object (as opposed to the latest version, the default).",
+       "format": "int64",
+       "location": "query"
+      },
+      "object": {
+       "type": "string",
+       "description": "Name of the object. For information about how to URL encode object names to be path safe, see Encoding URI Path Parts.",
+       "required": true,
+       "location": "path"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket",
+      "object"
+     ],
+     "request": {
+      "$ref": "Policy"
+     },
+     "response": {
+      "$ref": "Policy"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_write"
+     ]
+    },
+    "testIamPermissions": {
+     "id": "storage.objects.testIamPermissions",
+     "path": "b/{bucket}/o/{object}/iam/testPermissions",
+     "httpMethod": "GET",
+     "description": "Tests a set of permissions on the given object to see which, if any, are held by the caller.",
+     "parameters": {
+      "bucket": {
+       "type": "string",
+       "description": "Name of the bucket in which the object resides.",
+       "required": true,
+       "location": "path"
+      },
+      "generation": {
+       "type": "string",
+       "description": "If present, selects a specific revision of this object (as opposed to the latest version, the default).",
+       "format": "int64",
+       "location": "query"
+      },
+      "object": {
+       "type": "string",
+       "description": "Name of the object. For information about how to URL encode object names to be path safe, see Encoding URI Path Parts.",
+       "required": true,
+       "location": "path"
+      },
+      "permissions": {
+       "type": "string",
+       "description": "Permissions to test.",
+       "required": true,
+       "repeated": true,
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
+       "location": "query"
+      }
+     },
+     "parameterOrder": [
+      "bucket",
+      "object",
+      "permissions"
+     ],
+     "response": {
+      "$ref": "TestIamPermissionsResponse"
+     },
+     "scopes": [
+      "https://www.googleapis.com/auth/cloud-platform",
+      "https://www.googleapis.com/auth/cloud-platform.read-only",
+      "https://www.googleapis.com/auth/devstorage.full_control",
+      "https://www.googleapis.com/auth/devstorage.read_only",
       "https://www.googleapis.com/auth/devstorage.read_write"
      ]
     },
@@ -2706,13 +3577,13 @@
       },
       "ifGenerationMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the object's current generation matches the given value.",
+       "description": "Makes the operation conditional on whether the object's current generation matches the given value. Setting to 0 makes the operation succeed only if there are no live versions of the object.",
        "format": "int64",
        "location": "query"
       },
       "ifGenerationNotMatch": {
        "type": "string",
-       "description": "Makes the operation conditional on whether the object's current generation does not match the given value.",
+       "description": "Makes the operation conditional on whether the object's current generation does not match the given value. If no live object exists, the precondition fails. Setting to 0 makes the operation succeed only if there is a live version of the object.",
        "format": "int64",
        "location": "query"
       },
@@ -2764,8 +3635,13 @@
        ],
        "enumDescriptions": [
         "Include all properties.",
-        "Omit the acl property."
+        "Omit the owner, acl property."
        ],
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
        "location": "query"
       }
      },
@@ -2781,11 +3657,8 @@
      },
      "scopes": [
       "https://www.googleapis.com/auth/cloud-platform",
-      "https://www.googleapis.com/auth/devstorage.full_control",
-      "https://www.googleapis.com/auth/devstorage.read_write"
-     ],
-     "supportsMediaDownload": true,
-     "useMediaDownloadService": true
+      "https://www.googleapis.com/auth/devstorage.full_control"
+     ]
     },
     "watchAll": {
      "id": "storage.objects.watchAll",
@@ -2806,7 +3679,8 @@
       },
       "maxResults": {
        "type": "integer",
-       "description": "Maximum number of items plus prefixes to return. As duplicate prefixes are omitted, fewer total results may be returned than requested. The default value of this parameter is 1,000 items.",
+       "description": "Maximum number of items plus prefixes to return in a single page of responses. As duplicate prefixes are omitted, fewer total results may be returned than requested. The service will use this parameter or 1,000 items, whichever is smaller.",
+       "default": "1000",
        "format": "uint32",
        "minimum": "0",
        "location": "query"
@@ -2830,8 +3704,13 @@
        ],
        "enumDescriptions": [
         "Include all properties.",
-        "Omit the acl property."
+        "Omit the owner, acl property."
        ],
+       "location": "query"
+      },
+      "userProject": {
+       "type": "string",
+       "description": "The project to be billed for this request. Required for Requester Pays buckets.",
        "location": "query"
       },
       "versions": {
@@ -2858,6 +3737,46 @@
       "https://www.googleapis.com/auth/devstorage.read_write"
      ],
      "supportsSubscription": true
+    }
+   }
+  },
+  "projects": {
+   "resources": {
+    "serviceAccount": {
+     "methods": {
+      "get": {
+       "id": "storage.projects.serviceAccount.get",
+       "path": "projects/{projectId}/serviceAccount",
+       "httpMethod": "GET",
+       "description": "Get the email address of this project's Google Cloud Storage service account.",
+       "parameters": {
+        "projectId": {
+         "type": "string",
+         "description": "Project ID",
+         "required": true,
+         "location": "path"
+        },
+        "userProject": {
+         "type": "string",
+         "description": "The project to be billed for this request.",
+         "location": "query"
+        }
+       },
+       "parameterOrder": [
+        "projectId"
+       ],
+       "response": {
+        "$ref": "ServiceAccount"
+       },
+       "scopes": [
+        "https://www.googleapis.com/auth/cloud-platform",
+        "https://www.googleapis.com/auth/cloud-platform.read-only",
+        "https://www.googleapis.com/auth/devstorage.full_control",
+        "https://www.googleapis.com/auth/devstorage.read_only",
+        "https://www.googleapis.com/auth/devstorage.read_write"
+       ]
+      }
+     }
     }
    }
   }

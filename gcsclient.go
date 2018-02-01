@@ -7,10 +7,10 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/cheggaaa/pb"
 	"golang.org/x/oauth2"
 	oauthgoogle "golang.org/x/oauth2/google"
 	"google.golang.org/api/storage/v1"
+	"gopkg.in/cheggaaa/pb.v1"
 )
 
 type GCSClient interface {
