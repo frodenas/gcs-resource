@@ -1,4 +1,4 @@
-# GCS Resource
+# GCS Resource  [![Build Status](https://travis-ci.org/frodenas/helm-osb.png)](https://travis-ci.org/frodenas/gcs-resource)
 
 Versions objects in a [Google Cloud Storage](https://cloud.google.com/storage/) (GCS) bucket, by pattern-matching filenames to identify version numbers.
 
