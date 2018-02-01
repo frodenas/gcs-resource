@@ -1,8 +1,8 @@
 # GCS Resource  [![Build Status](https://travis-ci.org/frodenas/helm-osb.png)](https://travis-ci.org/frodenas/gcs-resource)
 
-Versions objects in a [Google Cloud Storage](https://cloud.google.com/storage/) (GCS) bucket, by pattern-matching filenames to identify version numbers.
+Versions objects in a [Google Cloud Storage][gcs] (GCS) bucket, by pattern-matching filenames to identify version numbers.
 
-This resource is based on the official [S3 resource](https://github.com/concourse/s3-resource).
+This resource is based on the official [S3 resource][s3-resource].
 
 ## Source Configuration
 
@@ -28,13 +28,13 @@ One of the following two options must be specified:
 
   The version extracted from this pattern is used to version the resource. Semantic versions, or just numbers, are supported. Accordingly, full regular expressions are supported, to specify the capture groups.
 
-* `versioned_file`: if you [enable versioning](https://cloud.google.com/storage/docs/object-versioning#_Enabling) for your GCS bucket then you can keep the file name the same and upload new versions of your file without resorting to version numbers. This property is the path to the file in your GCS bucket.
+* `versioned_file`: if you [enable versioning][gsc-versioning] for your GCS bucket then you can keep the file name the same and upload new versions of your file without resorting to version numbers. This property is the path to the file in your GCS bucket.
 
 ## Behavior
 
 ### `check`: Extract versions from the bucket.
 
-Objects will be found via the pattern configured by `regexp` or `versioned_file`. The versions will be used to order them (using [semver](http://semver.org/)). Each object's filename is the resulting version.
+Objects will be found via the pattern configured by `regexp` or `versioned_file`. The versions will be used to order them (using [semver][semver]). Each object's filename is the resulting version.
 
 ### `in`: Fetch an object from the bucket.
 
@@ -64,13 +64,14 @@ a new version of that file.
 * `file` (*required*): path to the file to upload, provided by an output of a
   task. If multiple files are matched by the glob, an error is raised. The file which matches will be placed into the directory structure on GCS as defined in `regexp` in the resource definition. The matching syntax is bash glob expansion, so no capture groups, etc.
 
-* `predefined_acl` (*optional*): the predefined ACL for the object. Acceptable values are:
+* `predefined_acl` (*optional*): the [predefined ACL][gcs-acls] for the object. Acceptable values are:
   - `authenticatedRead`: Object owner gets OWNER access, and allAuthenticatedUsers get READER access.
   - `bucketOwnerFullControl`: Object owner gets OWNER access, and project team owners get OWNER access.
   - `bucketOwnerRead`: Object owner gets OWNER access, and project team owners get READER access.
   - `private`: Object owner gets OWNER access.
   - `projectPrivate`: Object owner gets OWNER access, and project team members get access according to their roles.
   - `publicRead`: Object owner gets OWNER access, and allUsers get READER access.
+  - `publicReadWrite`: Object owner gets OWNER access, and allUsers get READER and WRITER access.
 
 ## Example Configuration
 
@@ -109,27 +110,13 @@ resources:
     predefined_acl: publicRead
 ```
 
-## Developing on this resource
+## Development
 
-First get the resource via: `go get github.com/frodenas/gcs-resource`
-
-Run the `unit-tests`: `make`
-
-Run the `integration-tests`: `make integration-tests`
-
-## Developing using Concourse
-
-Clone this repository and just run one-off task with concourse
-
-```bash
-fly -t ConcourseTarget execute -c build.yml -i gcs-resource=. -o built-resource=.
-```
-
-Just build the Docker image to be use inside your pipeline
-
-```bash
- docker build -t frodenas/gcs-resource .
-```
+* Get the resource: `go get github.com/frodenas/gcs-resource`
+* Run the `unit-tests`: `make`
+* Run the `integration-tests`: `make integration-tests`
+* Build the source code using concourse: `fly -t ConcourseTarget execute -c ci/tasks/build.yml -i gcs-resource-src=. -o built-resource=.`
+* Build  the Docker image to be use inside your pipeline: `docker build -t frodenas/gcs-resource .`
 
 ## Contributing
 
@@ -140,4 +127,9 @@ Refer to the [contributing guidelines][contributing].
 Apache License 2.0, see [LICENSE][license].
 
 [contributing]: https://github.com/frodenas/gcs-resource/blob/master/CONTRIBUTING.md
+[gcs]: https://cloud.google.com/storage/
+[gcs-acls]: https://cloud.google.com/storage/docs/access-control/lists#predefined-acl
+[gsc-versioning]: https://cloud.google.com/storage/docs/object-versioning#_Enabling
 [license]: https://github.com/frodenas/gcs-resource/blob/master/LICENSE
+[s3-resource]: https://github.com/concourse/s3-resource
+[semver]: http://semver.org/
