@@ -5,7 +5,7 @@ pkgs   = $(shell $(GO) list ./... | grep -v /vendor/)
 DOCKER_IMAGE_NAME ?= gcs-resource
 DOCKER_IMAGE_TAG  ?= $(subst /,-,$(shell git rev-parse --abbrev-ref HEAD))
 
-all: format build unit-tests
+default: format build unit-tests
 
 deps:
 	@$(GO) get github.com/onsi/ginkgo/ginkgo
@@ -43,4 +43,4 @@ docker:
 	@echo ">> building docker image"
 	@docker build -t "$(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG)" .
 
-.PHONY: all deps format style vet build unit-tests integration-tests docker
+.PHONY: default deps format style vet build unit-tests integration-tests docker
