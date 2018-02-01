@@ -11,6 +11,7 @@ jobs:
   include:
     - stage: Unit tests
       script: make
+
     - stage: Integration tests
       if: type != pull_request
       env:
@@ -20,19 +21,29 @@ jobs:
       script:
         - openssl aes-256-cbc -K $encrypted_901c39c3ea3a_key -iv $encrypted_901c39c3ea3a_iv -in client_secrets.json.enc -out $GOOGLE_APPLICATION_CREDENTIALS -d
         - make integration-tests
+
     - stage: Build docker image
       env:
         - DOCKER_IMAGE_NAME=frodenas/gcs-resource
+        - secure: IQAiDaXuiEYTcon43ujAIxRn0t6xd4BZMH5z1e5rW7ybyMiDNQ3vh0v9mH3l56WocRrQDZzCmWGyeTJOblgNsrqCxmW2j/By6UU+8N/PPE0CgrL+TiCccQZFTzW8GhRGEfmW8WTTDznlAk/oUH10xFpH3bfn9k2NO8PTZKUPYFHxF2hN6tGYvuYMyRoYq7/7Nag2L0luzRsqKDXrM80nFYAh8wL8hSevuslLtG5dYglZP8qrgm/uoHCQqth3Etwdgu6twvqcK5O/cVWzYxyf5fk2R86cdzu0Qb7CimHdFm9mXNnlzqz7HJ96ACL9NEnrpfyJ5koJYZ9BnvmpeZ9S+PdfQJYk9LlGmtEddENowyM9HW6Ef6A5+4IZOaNLf4rX1a43GJEMrhxt+h4frhVIlTbAjjjZmL50XcPR1Y/HuLfcSBAG5hqR7aK9UpmQdj2TmqO6qPfPiy4qVBoDzeL9IdvSvK9Wvb1mx3HycKdeaLlhWwg19uQrkgpKPsvUZ684lSEDAKoWbilFhKLS224rqiJ3wwjX7JLUKn1ade+BSrMNb139ifHOOBgONePIcJ3tj5wFXvhNDZplrBlYmEvCHSJnehIjJAI+NRt3MAEPUSRWNBUj5C9R5Gdd0pzYwhhkuzfKlKsxpVJZEsFIyDHSrvMoXe6XqbyGOSP8/Dpyo9U=
+        - secure: MlLxqReBxtqdGQRmoEryBOAxuFDT3mXuoF8T4kmXGniNvy+pOyymUTmTKwXyJZAdW2jVPmjQKiKaOJJFB52/HOIqKYZVFNdY4fjXn6MfiCLZXErVLhYcFHwilnLrJVU1D00kuRafA4GwmG8geisSQgjSW4CkH1uNt8iUq3b4awNnthRsC3kB/tVP3zaqiRIhXz/YPOWTc4mCZK4620yD/qtjQ/s7henPn3oRDLKs1AWUD7HLglhFVM47o8ATj2jBKfgsBwEHj4mGOmsi/YiMQdgEZIZ6ZDpR+bkK42e5Jm1rARh0+BP/Kh7B6d/8z94bPXBPxmRet5bjDRwQTD7Osg3EJFqKO6ubLOnq4vI44v6WmdfYgUUYwWTVNA+YBIjGSNsMIrE7py6/eisF13PHpLubnd1XvYJozxCjbAy+tQDY2TR9JR8GfuNcuBOzSyMwKLJhBDxIAQ9sV0zdBg5C5vI1o+ONlXf+Wchv73Owmwg9oOqw2io4zRZCuEN+C6wEpwKrQKGexQ1h39btH3dV9b+AF6EJ6v0AgrkiuPXv3XlXbZoMLHMK00Yn18NuG40aZfjtyL7Wm6emKi/kJrRxKXNhchb3heyHJ+ye/pRJyppMFfzFCwL26KZCvqP4SCNVY+J+Tqy1+9sLlZA4Gr9uE3S7VFLbw4dCK81nZQutyQg=
       script:
         - make build
         - |
           if [ -n "$TRAVIS_TAG" ]; then
-            make docker DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME DOCKER_IMAGE_TAG=$TRAVIS_TAG
+            DOCKER_IMAGE_TAG=$TRAVIS_TAG
           else
-            make docker DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME DOCKER_IMAGE_TAG=$(if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then echo $TRAVIS_BRANCH; else echo $TRAVIS_PULL_REQUEST_BRANCH; fi)
+            if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+              DOCKER_IMAGE_TAG=$TRAVIS_BRANCH
+            else
+              DOCKER_IMAGE_TAG=$TRAVIS_PULL_REQUEST_BRANCH
+            fi
           fi
-        - |
-          if [[ "$TRAVIS_TAG" =~ ^v[0-9]+(\.[0-9]+){2}$ ]]; then
-            docker tag "$DOCKER_IMAGE_NAME:$TRAVIS_TAG" "$DOCKER_IMAGE_NAME:latest"
-          fi
+        - make docker DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG
+        - docker tag "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG" "$DOCKER_IMAGE_NAME:latest"
         - docker images
+        - |
+          if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
+            docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
+            docker push $DOCKER_IMAGE_NAME
+          fi
