@@ -49,7 +49,6 @@ resources:
   - name: gcs-resource-image
     type: docker-image
     source:
-      email: {{docker_email}}
       username: {{docker_username}}
       password: {{docker_password}}
       repository: frodenas/gcs-resource
