@@ -35,8 +35,10 @@ func (command *OutCommand) Run(sourceDir string, request OutRequest) (OutRespons
 
 	objectPath := command.objectPath(request, localPath)
 
+	objectContentType := command.objectContentType(request)
+
 	bucketName := request.Source.Bucket
-	generation, err := command.gcsClient.UploadFile(bucketName, objectPath, localPath, request.Params.PredefinedACL)
+	generation, err := command.gcsClient.UploadFile(bucketName, objectPath, objectContentType, localPath, request.Params.PredefinedACL)
 	if err != nil {
 		return OutResponse{}, err
 	}
@@ -81,6 +83,10 @@ func (command *OutCommand) objectPath(request OutRequest, localPath string) stri
 	} else {
 		return request.Source.VersionedFile
 	}
+}
+
+func (command *OutCommand) objectContentType(request OutRequest) string {
+	return request.Params.ContentType
 }
 
 func parentDir(regexp string) string {

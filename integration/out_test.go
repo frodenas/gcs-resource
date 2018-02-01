@@ -17,6 +17,7 @@ import (
 
 	"github.com/frodenas/gcs-resource"
 	"github.com/frodenas/gcs-resource/out"
+	"github.com/mholt/archiver"
 	"github.com/nu7hatch/gouuid"
 )
 
@@ -111,6 +112,19 @@ var _ = Describe("out", func() {
 
 			It("returns an error", func() {
 				Expect(session.Err).To(gbytes.Say("please specify the file"))
+			})
+		})
+
+		Context("when the content type is incorrect", func() {
+			BeforeEach(func() {
+				outRequest.Params.ContentType = "wrong-type"
+
+				err := json.NewEncoder(stdin).Encode(outRequest)
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("returns an error", func() {
+				Expect(session.Err).To(gbytes.Say("I don't know"))
 			})
 		})
 	})
@@ -462,5 +476,121 @@ var _ = Describe("out", func() {
 				Expect(session.Err).To(gbytes.Say("error running command: googleapi:"))
 			})
 		})
+	})
+	Describe("with content_type", func() {
+		var (
+			outRequest out.OutRequest
+			filePath   string
+		)
+
+		Context("upload the pivotal file with application/octet-stream and get *.pivotal back", func() {
+			BeforeEach(func() {
+				// upload the .pivotal file
+				filePath = filepath.Join(sourceDir, "file-to-upload")
+
+				err = ioutil.WriteFile(filePath, []byte("contents"), 0755)
+				Expect(err).ToNot(HaveOccurred())
+
+				err = archiver.Zip.Make(filepath.Join(sourceDir, "output-success.pivotal"), []string{filePath})
+				outRequest.Params.File = "output-success.pivotal"
+
+				// upload file with cmd
+				outRequest = out.OutRequest{
+					Source: gcsresource.Source{
+						JSONKey: jsonKey,
+						Bucket:  bucketName,
+						Regexp:  "output-success.*",
+					},
+					Params: out.Params{
+						File:        "output-success.*",
+						ContentType: "application/octet-stream",
+					},
+				}
+
+				err = json.NewEncoder(stdin).Encode(outRequest)
+				Expect(err).ToNot(HaveOccurred())
+
+				// remove local files
+				os.Remove(filepath.Join(sourceDir, "output-success.pivotal"))
+			})
+			AfterEach(func() {
+				err := gcsClient.DeleteObject(bucketName, "output-success.pivotal", int64(0))
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("downlaod the file and check file type", func() {
+				err = gcsClient.DownloadFile(bucketName, "output-success.pivotal", int64(0), sourceDir)
+				Expect(err).ToNot(HaveOccurred())
+
+				_, err = os.Stat(filepath.Join(sourceDir, "output-success.pivotal"))
+				Expect(os.IsExist(err)).To(Equal(true))
+
+				_, err = os.Stat(filepath.Join(sourceDir, "output-success.zip"))
+				Expect(os.IsExist(err)).To(Equal(false))
+
+				files, err := ioutil.ReadDir(sourceDir)
+				Expect(err).ToNot(HaveOccurred())
+				for file := range files {
+					fmt.Println("####")
+					fmt.Println(file)
+				}
+			})
+
+		})
+
+		It("upload the zip file with empty content type and get zip file back", func() {
+			BeforeEach(func() {
+				// upload the .pivotal file
+				filePath = filepath.Join(sourceDir, "file-to-upload")
+
+				err = ioutil.WriteFile(filePath, []byte("contents"), 0755)
+				Expect(err).ToNot(HaveOccurred())
+
+				err = archiver.Zip.Make(filepath.Join(sourceDir, "output-fail.pivotal"), []string{filePath})
+				outRequest.Params.File = "output-fail.pivotal"
+
+				// upload file with cmd
+				outRequest = out.OutRequest{
+					Source: gcsresource.Source{
+						JSONKey: jsonKey,
+						Bucket:  bucketName,
+						Regexp:  "output-fail.*",
+					},
+					Params: out.Params{
+						File: "output-fail.*",
+					},
+				}
+
+				err = json.NewEncoder(stdin).Encode(outRequest)
+				Expect(err).ToNot(HaveOccurred())
+
+				// remove local files
+				os.Remove(filepath.Join(sourceDir, "output-fail.pivotal"))
+			})
+			AfterEach(func() {
+				err := gcsClient.DeleteObject(bucketName, "output-fail.pivotal", int64(0))
+				Expect(err).ToNot(HaveOccurred())
+			})
+
+			It("downlaod the file and check file type, should be zip", func() {
+				err = gcsClient.DownloadFile(bucketName, "output-fail.pivotal", int64(0), sourceDir)
+				Expect(err).ToNot(HaveOccurred())
+
+				_, err = os.Stat(filepath.Join(sourceDir, "output-fail.pivotal"))
+				Expect(os.IsExist(err)).To(Equal(false))
+
+				_, err = os.Stat(filepath.Join(sourceDir, "output-fail.zip"))
+				Expect(os.IsExist(err)).To(Equal(true))
+
+				files, err := ioutil.ReadDir(sourceDir)
+				Expect(err).ToNot(HaveOccurred())
+				for file := range files {
+					fmt.Println("####")
+					fmt.Println(file)
+				}
+			})
+
+		})
+
 	})
 })

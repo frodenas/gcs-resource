@@ -73,6 +73,9 @@ a new version of that file.
   - `publicRead`: Object owner gets OWNER access, and allUsers get READER access.
   - `publicReadWrite`: Object owner gets OWNER access, and allUsers get READER and WRITER access.
 
+* `content_type` (*optional*): the content-type for the object. Acceptable values are:
+  - `application/octet-stream` When download the object, it will keep the type when it is uploaded. For example, '*.pivotal' will still be '*.pivotal' after download.
+
 ## Example Configuration
 
 ### Resource Type
@@ -108,6 +111,7 @@ resources:
   params:
     file: path/to/release-*.tgz
     predefined_acl: publicRead
+    content_type: application/octet-stream
 ```
 
 ## Development

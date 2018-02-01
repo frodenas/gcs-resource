@@ -40,7 +40,8 @@ var _ = Describe("Out Command", func() {
 					Bucket: "bucket-name",
 				},
 				Params: Params{
-					File: "files/file*.tgz",
+					File:        "files/file*.tgz",
+					ContentType: "",
 				},
 			}
 
@@ -140,12 +141,13 @@ var _ = Describe("Out Command", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
-				bucketName, objectPath, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
+				bucketName, objectPath, objectContentType, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
 
 				Expect(bucketName).To(Equal("bucket-name"))
 				Expect(objectPath).To(Equal("folder/file.tgz"))
 				Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
 				Expect(predefinedACL).To(BeEmpty())
+				Expect(objectContentType).To(Equal(""))
 			})
 
 			It("returns a response", func() {
@@ -196,12 +198,13 @@ var _ = Describe("Out Command", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
-					bucketName, objectPath, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
+					bucketName, objectPath, objectContentType, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
 
 					Expect(bucketName).To(Equal("bucket-name"))
 					Expect(objectPath).To(Equal("folder/file.tgz"))
 					Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
 					Expect(predefinedACL).To(Equal("publicRead"))
+					Expect(objectContentType).To(Equal(""))
 				})
 			})
 		})
@@ -217,12 +220,13 @@ var _ = Describe("Out Command", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
-				bucketName, objectPath, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
+				bucketName, objectPath, objectContentType, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
 
 				Expect(bucketName).To(Equal("bucket-name"))
 				Expect(objectPath).To(Equal("folder/version"))
 				Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
 				Expect(predefinedACL).To(BeEmpty())
+				Expect(objectContentType).To(Equal(""))
 			})
 
 			It("returns a response", func() {
@@ -273,13 +277,34 @@ var _ = Describe("Out Command", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
-					bucketName, objectPath, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
+					bucketName, objectPath, objectContentType, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
 
 					Expect(bucketName).To(Equal("bucket-name"))
 					Expect(objectPath).To(Equal("folder/version"))
 					Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
 					Expect(predefinedACL).To(Equal("publicRead"))
+					Expect(objectContentType).To(Equal(""))
 				})
+			})
+		})
+		Describe("with content_type", func() {
+			BeforeEach(func() {
+				request.Params.ContentType = "application/octet-stream"
+				request.Source.VersionedFile = "folder/version"
+				createFile("files/file.tgz")
+			})
+			It("uploads the file with content type application/octet-stream", func() {
+				_, err := command.Run(sourceDir, request)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
+				bucketName, objectPath, objectContentType, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
+
+				Expect(bucketName).To(Equal("bucket-name"))
+				Expect(objectPath).To(Equal("folder/version"))
+				Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
+				Expect(predefinedACL).To(BeEmpty())
+				Expect(objectContentType).To(Equal("application/octet-stream"))
 			})
 		})
 	})
