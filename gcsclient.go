@@ -9,6 +9,7 @@ import (
 
 	"golang.org/x/oauth2"
 	oauthgoogle "golang.org/x/oauth2/google"
+	"google.golang.org/api/googleapi"
 	"google.golang.org/api/storage/v1"
 	"gopkg.in/cheggaaa/pb.v1"
 )
@@ -20,6 +21,7 @@ type GCSClient interface {
 	UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string) (int64, error)
 	URL(bucketName string, objectPath string, generation int64) (string, error)
 	DeleteObject(bucketName string, objectPath string, generation int64) error
+	GetBucketObjectInfo(bucketName, objectPath string) (*storage.Object, error)
 }
 
 type gcsclient struct {
@@ -158,7 +160,7 @@ func (gcsclient *gcsclient) UploadFile(bucketName string, objectPath string, obj
 		ContentType: objectContentType,
 	}
 
-	insertCall := gcsclient.storageService.Objects.Insert(bucketName, object).Media(progress.NewProxyReader(localFile))
+	insertCall := gcsclient.storageService.Objects.Insert(bucketName, object).Media(progress.NewProxyReader(localFile), googleapi.ContentType(objectContentType))
 	if predefinedACL != "" {
 		insertCall = insertCall.PredefinedAcl(predefinedACL)
 	}
@@ -208,6 +210,16 @@ func (gcsclient *gcsclient) DeleteObject(bucketName string, objectPath string, g
 	}
 
 	return nil
+}
+
+func (gcsclient *gcsclient) GetBucketObjectInfo(bucketName, objectPath string) (*storage.Object, error) {
+	getCall := gcsclient.storageService.Objects.Get(bucketName, objectPath)
+	object, err := getCall.Do()
+	if err != nil {
+		return nil, err
+	}
+
+	return object, nil
 }
 
 func (gcsclient *gcsclient) getBucketObjects(bucketName string, prefix string) ([]string, error) {
