@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/frodenas/gcs-resource"
+	storage "google.golang.org/api/storage/v1"
 )
 
 type FakeGCSClient struct {
@@ -94,6 +95,20 @@ type FakeGCSClient struct {
 	}
 	deleteObjectReturnsOnCall map[int]struct {
 		result1 error
+	}
+	GetBucketObjectInfoStub        func(bucketName, objectPath string) (*storage.Object, error)
+	getBucketObjectInfoMutex       sync.RWMutex
+	getBucketObjectInfoArgsForCall []struct {
+		bucketName string
+		objectPath string
+	}
+	getBucketObjectInfoReturns struct {
+		result1 *storage.Object
+		result2 error
+	}
+	getBucketObjectInfoReturnsOnCall map[int]struct {
+		result1 *storage.Object
+		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
@@ -412,6 +427,58 @@ func (fake *FakeGCSClient) DeleteObjectReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
+func (fake *FakeGCSClient) GetBucketObjectInfo(bucketName string, objectPath string) (*storage.Object, error) {
+	fake.getBucketObjectInfoMutex.Lock()
+	ret, specificReturn := fake.getBucketObjectInfoReturnsOnCall[len(fake.getBucketObjectInfoArgsForCall)]
+	fake.getBucketObjectInfoArgsForCall = append(fake.getBucketObjectInfoArgsForCall, struct {
+		bucketName string
+		objectPath string
+	}{bucketName, objectPath})
+	fake.recordInvocation("GetBucketObjectInfo", []interface{}{bucketName, objectPath})
+	fake.getBucketObjectInfoMutex.Unlock()
+	if fake.GetBucketObjectInfoStub != nil {
+		return fake.GetBucketObjectInfoStub(bucketName, objectPath)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	return fake.getBucketObjectInfoReturns.result1, fake.getBucketObjectInfoReturns.result2
+}
+
+func (fake *FakeGCSClient) GetBucketObjectInfoCallCount() int {
+	fake.getBucketObjectInfoMutex.RLock()
+	defer fake.getBucketObjectInfoMutex.RUnlock()
+	return len(fake.getBucketObjectInfoArgsForCall)
+}
+
+func (fake *FakeGCSClient) GetBucketObjectInfoArgsForCall(i int) (string, string) {
+	fake.getBucketObjectInfoMutex.RLock()
+	defer fake.getBucketObjectInfoMutex.RUnlock()
+	return fake.getBucketObjectInfoArgsForCall[i].bucketName, fake.getBucketObjectInfoArgsForCall[i].objectPath
+}
+
+func (fake *FakeGCSClient) GetBucketObjectInfoReturns(result1 *storage.Object, result2 error) {
+	fake.GetBucketObjectInfoStub = nil
+	fake.getBucketObjectInfoReturns = struct {
+		result1 *storage.Object
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeGCSClient) GetBucketObjectInfoReturnsOnCall(i int, result1 *storage.Object, result2 error) {
+	fake.GetBucketObjectInfoStub = nil
+	if fake.getBucketObjectInfoReturnsOnCall == nil {
+		fake.getBucketObjectInfoReturnsOnCall = make(map[int]struct {
+			result1 *storage.Object
+			result2 error
+		})
+	}
+	fake.getBucketObjectInfoReturnsOnCall[i] = struct {
+		result1 *storage.Object
+		result2 error
+	}{result1, result2}
+}
+
 func (fake *FakeGCSClient) Invocations() map[string][][]interface{} {
 	fake.invocationsMutex.RLock()
 	defer fake.invocationsMutex.RUnlock()
@@ -427,6 +494,8 @@ func (fake *FakeGCSClient) Invocations() map[string][][]interface{} {
 	defer fake.uRLMutex.RUnlock()
 	fake.deleteObjectMutex.RLock()
 	defer fake.deleteObjectMutex.RUnlock()
+	fake.getBucketObjectInfoMutex.RLock()
+	defer fake.getBucketObjectInfoMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
