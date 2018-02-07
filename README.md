@@ -73,8 +73,7 @@ a new version of that file.
   - `publicRead`: Object owner gets OWNER access, and allUsers get READER access.
   - `publicReadWrite`: Object owner gets OWNER access, and allUsers get READER and WRITER access.
 
-* `content_type` (*optional*): the content-type for the object. Acceptable values are:
-  - `application/octet-stream` When download the object, it will keep the type when it is uploaded. For example, '*.pivotal' will still be '*.pivotal' after download.
+* `content_type` (*optional*): Set the MIME type for the object to be uploaded, eg. `application/octet-stream`.
 
 ## Example Configuration
 
