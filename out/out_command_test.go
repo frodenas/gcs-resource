@@ -287,12 +287,14 @@ var _ = Describe("Out Command", func() {
 				})
 			})
 		})
+
 		Describe("with content_type", func() {
 			BeforeEach(func() {
 				request.Params.ContentType = "application/octet-stream"
 				request.Source.VersionedFile = "folder/version"
 				createFile("files/file.tgz")
 			})
+
 			It("uploads the file with content type application/octet-stream", func() {
 				_, err := command.Run(sourceDir, request)
 				Expect(err).ToNot(HaveOccurred())
