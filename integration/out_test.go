@@ -482,30 +482,39 @@ var _ = Describe("out", func() {
 			})
 		})
 	})
+
 	Describe("with content_type", func() {
 		var (
-			outRequest  out.OutRequest
-			filePath    string
-			tarballName string
+			outRequest      out.OutRequest
+			filePath        string
+			tarballName     string
+			directoryPrefix string
 		)
+
+		BeforeEach(func() {
+			guid, err := uuid.NewV4()
+			Expect(err).ToNot(HaveOccurred())
+			directoryPrefix = "out-request-files-" + guid.String()
+
+			// upload the .pivotal file
+			filePath = filepath.Join(sourceDir, "file-to-upload")
+			tarballName = "output-success.pivotal"
+
+			err = ioutil.WriteFile(filePath, []byte("contents"), 0755)
+			Expect(err).ToNot(HaveOccurred())
+
+			err = archiver.Zip.Make(filepath.Join(sourceDir, tarballName), []string{filePath})
+			Expect(err).ToNot(HaveOccurred())
+		})
 
 		Context("upload the pivotal file with application/octet-stream and get *.pivotal back", func() {
 			BeforeEach(func() {
-				// upload the .pivotal file
-				filePath = filepath.Join(sourceDir, "file-to-upload")
-				tarballName = "output-success.pivotal"
-
-				err = ioutil.WriteFile(filePath, []byte("contents"), 0755)
-				Expect(err).ToNot(HaveOccurred())
-
-				err = archiver.Zip.Make(filepath.Join(sourceDir, tarballName), []string{filePath})
-
 				// upload file with cmd
 				outRequest = out.OutRequest{
 					Source: gcsresource.Source{
 						JSONKey: jsonKey,
 						Bucket:  bucketName,
-						Regexp:  tarballName,
+						Regexp:  filepath.Join(directoryPrefix, tarballName),
 					},
 					Params: out.Params{
 						File:        tarballName,
@@ -515,38 +524,28 @@ var _ = Describe("out", func() {
 
 				err = json.NewEncoder(stdin).Encode(outRequest)
 				Expect(err).ToNot(HaveOccurred())
-
 			})
+
 			AfterEach(func() {
-				err := gcsClient.DeleteObject(bucketName, tarballName, int64(0))
+				err := gcsClient.DeleteObject(bucketName, filepath.Join(directoryPrefix, tarballName), int64(0))
 				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("the content-type of file should be application/octet-stream", func() {
-				object, err := gcsClient.GetBucketObjectInfo(bucketName, tarballName)
+				object, err := gcsClient.GetBucketObjectInfo(bucketName, filepath.Join(directoryPrefix, tarballName))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(object.ContentType).To(Equal("application/octet-stream"))
 			})
-
 		})
 
 		Context("upload the zip file with empty content type and get zip file back", func() {
 			BeforeEach(func() {
-				// upload the .pivotal file
-				filePath = filepath.Join(sourceDir, "file-to-upload")
-				tarballName = "output-fail.pivotal"
-				err = ioutil.WriteFile(filePath, []byte("contents"), 0755)
-				Expect(err).ToNot(HaveOccurred())
-
-				err = archiver.Zip.Make(filepath.Join(sourceDir, tarballName), []string{filePath})
-				Expect(err).ToNot(HaveOccurred())
-
 				// upload file with cmd
 				outRequest = out.OutRequest{
 					Source: gcsresource.Source{
 						JSONKey: jsonKey,
 						Bucket:  bucketName,
-						Regexp:  tarballName,
+						Regexp:  filepath.Join(directoryPrefix, tarballName),
 					},
 					Params: out.Params{
 						File: tarballName,
@@ -555,20 +554,18 @@ var _ = Describe("out", func() {
 
 				err = json.NewEncoder(stdin).Encode(outRequest)
 				Expect(err).ToNot(HaveOccurred())
-
 			})
+
 			AfterEach(func() {
-				err := gcsClient.DeleteObject(bucketName, tarballName, int64(0))
+				err := gcsClient.DeleteObject(bucketName, filepath.Join(directoryPrefix, tarballName), int64(0))
 				Expect(err).ToNot(HaveOccurred())
 			})
 
 			It("the content-type of file should be application/zip", func() {
-				object, err := gcsClient.GetBucketObjectInfo(bucketName, tarballName)
+				object, err := gcsClient.GetBucketObjectInfo(bucketName, filepath.Join(directoryPrefix, tarballName))
 				Expect(err).ToNot(HaveOccurred())
 				Expect(object.ContentType).To(Equal("application/zip"))
 			})
-
 		})
-
 	})
 })

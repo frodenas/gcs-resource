@@ -160,7 +160,12 @@ func (gcsclient *gcsclient) UploadFile(bucketName string, objectPath string, obj
 		ContentType: objectContentType,
 	}
 
-	insertCall := gcsclient.storageService.Objects.Insert(bucketName, object).Media(progress.NewProxyReader(localFile), googleapi.ContentType(objectContentType))
+	var mediaOptions []googleapi.MediaOption
+	if objectContentType != "" {
+		mediaOptions = append(mediaOptions, googleapi.ContentType(objectContentType))
+	}
+
+	insertCall := gcsclient.storageService.Objects.Insert(bucketName, object).Media(progress.NewProxyReader(localFile), mediaOptions...)
 	if predefinedACL != "" {
 		insertCall = insertCall.PredefinedAcl(predefinedACL)
 	}
