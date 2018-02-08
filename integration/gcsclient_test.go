@@ -47,21 +47,31 @@ var _ = Describe("GCSclient", func() {
 
 			err = gcsClient.DeleteObject(bucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), 0)
 			Expect(err).ToNot(HaveOccurred())
+
+			err = gcsClient.DeleteObject(bucketName, filepath.Join(directoryPrefix, "zip-to-upload.zip"), 0)
+			Expect(err).ToNot(HaveOccurred())
 		})
 
 		It("can interact with buckets", func() {
-			_, err := gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-upload-1"), tempFile.Name(), "")
+			_, err := gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-upload-1"), "", tempFile.Name(), "")
 			Expect(err).ToNot(HaveOccurred())
 
-			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), tempFile.Name(), "")
+			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), "", tempFile.Name(), "")
 			Expect(err).ToNot(HaveOccurred())
 
-			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), tempFile.Name(), "")
+			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), "", tempFile.Name(), "")
 			Expect(err).ToNot(HaveOccurred())
+
+			_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "zip-to-upload.zip"), "application/zip", tempFile.Name(), "")
+			Expect(err).ToNot(HaveOccurred())
+
+			fakeZipFileObject, err := gcsClient.GetBucketObjectInfo(bucketName, filepath.Join(directoryPrefix, "zip-to-upload.zip"))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fakeZipFileObject.ContentType).To(Equal("application/zip"))
 
 			files, err := gcsClient.BucketObjects(bucketName, directoryPrefix)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(files).To(ConsistOf([]string{filepath.Join(directoryPrefix, "file-to-upload-1"), filepath.Join(directoryPrefix, "file-to-upload-2")}))
+			Expect(files).To(ConsistOf([]string{filepath.Join(directoryPrefix, "file-to-upload-1"), filepath.Join(directoryPrefix, "file-to-upload-2"), filepath.Join(directoryPrefix, "zip-to-upload.zip")}))
 
 			_, err = gcsClient.ObjectGenerations(bucketName, filepath.Join(directoryPrefix, "file-to-upload-1"))
 			Expect(err).To(HaveOccurred())
@@ -118,25 +128,45 @@ var _ = Describe("GCSclient", func() {
 				err := gcsClient.DeleteObject(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), fileTwoGeneration)
 				Expect(err).ToNot(HaveOccurred())
 			}
+
+			fakeZipFileGenerations, err := gcsClient.ObjectGenerations(versionedBucketName, filepath.Join(directoryPrefix, "zip-to-upload.zip"))
+			Expect(err).ToNot(HaveOccurred())
+
+			for _, fakeZipFileGeneration := range fakeZipFileGenerations {
+				err := gcsClient.DeleteObject(versionedBucketName, filepath.Join(directoryPrefix, "zip-to-upload.zip"), fakeZipFileGeneration)
+				Expect(err).ToNot(HaveOccurred())
+			}
 		})
 
 		It("can interact with buckets", func() {
-			fileOneGeneration, err := gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-1"), tempVerFile.Name(), "")
+			fileOneGeneration, err := gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-1"), "", tempVerFile.Name(), "")
 			Expect(err).ToNot(HaveOccurred())
 
-			fileTwoGeneration1, err := gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), tempVerFile.Name(), "")
+			fileTwoGeneration1, err := gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), "", tempVerFile.Name(), "")
 			Expect(err).ToNot(HaveOccurred())
 
-			fileTwoGeneration2, err := gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), tempVerFile.Name(), "")
+			fileTwoGeneration2, err := gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), "", tempVerFile.Name(), "")
 			Expect(err).ToNot(HaveOccurred())
+
+			fakeZipFileGeneration, err := gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "zip-to-upload.zip"), "application/zip", tempVerFile.Name(), "")
+			Expect(err).ToNot(HaveOccurred())
+
+			fakeZipFileObject, err := gcsClient.GetBucketObjectInfo(versionedBucketName, filepath.Join(directoryPrefix, "zip-to-upload.zip"))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fakeZipFileObject.ContentType).To(Equal("application/zip"))
+			Expect(fakeZipFileGeneration).To(Equal(fakeZipFileObject.Generation))
 
 			files, err := gcsClient.BucketObjects(versionedBucketName, directoryPrefix)
 			Expect(err).ToNot(HaveOccurred())
-			Expect(files).To(ConsistOf([]string{filepath.Join(directoryPrefix, "file-to-upload-1"), filepath.Join(directoryPrefix, "file-to-upload-2")}))
+			Expect(files).To(ConsistOf([]string{filepath.Join(directoryPrefix, "file-to-upload-1"), filepath.Join(directoryPrefix, "file-to-upload-2"), filepath.Join(directoryPrefix, "zip-to-upload.zip")}))
 
 			fileOneGenerations, err := gcsClient.ObjectGenerations(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-1"))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fileOneGenerations).To(ConsistOf([]int64{fileOneGeneration}))
+
+			fileOneGenerationsObject, err := gcsClient.GetBucketObjectInfo(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-1"))
+			Expect(err).ToNot(HaveOccurred())
+			Expect(fileOneGenerations).To(ConsistOf([]int64{fileOneGenerationsObject.Generation}))
 
 			fileOneURL, err := gcsClient.URL(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-1"), 0)
 			Expect(err).ToNot(HaveOccurred())

@@ -73,6 +73,8 @@ a new version of that file.
   - `publicRead`: Object owner gets OWNER access, and allUsers get READER access.
   - `publicReadWrite`: Object owner gets OWNER access, and allUsers get READER and WRITER access.
 
+* `content_type` (*optional*): Set the MIME type for the object to be uploaded, eg. `application/octet-stream`.
+
 ## Example Configuration
 
 ### Resource Type
@@ -108,6 +110,7 @@ resources:
   params:
     file: path/to/release-*.tgz
     predefined_acl: publicRead
+    content_type: application/octet-stream
 ```
 
 ## Development
