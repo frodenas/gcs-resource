@@ -118,12 +118,12 @@ var _ = Describe("In Command", func() {
 				})
 
 				It("creates the destination directory", func() {
-					Expect(destDir).ToNot(ExistOnFilesystem())
+					Expect(destDir).ToNot(BeAnExistingFile())
 
 					_, err := command.Run(destDir, request)
 					Expect(err).ToNot(HaveOccurred())
 
-					Expect(destDir).To(ExistOnFilesystem())
+					Expect(destDir).To(BeAnExistingFile())
 				})
 
 				It("scans the bucket for the latest file to download", func() {
@@ -141,12 +141,12 @@ var _ = Describe("In Command", func() {
 
 				It("creates a 'version' file that contains the latest version", func() {
 					versionFile := filepath.Join(destDir, "version")
-					Expect(versionFile).ToNot(ExistOnFilesystem())
+					Expect(versionFile).ToNot(BeAnExistingFile())
 
 					_, err := command.Run(destDir, request)
 					Expect(err).ToNot(HaveOccurred())
 
-					Expect(versionFile).To(ExistOnFilesystem())
+					Expect(versionFile).To(BeAnExistingFile())
 					contents, err := ioutil.ReadFile(versionFile)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(string(contents)).To(Equal("3.53"))
@@ -156,7 +156,7 @@ var _ = Describe("In Command", func() {
 					gcsClient.URLReturns("gs://bucket-name/folder/file-3.53.tgz", nil)
 
 					urlFile := filepath.Join(destDir, "url")
-					Expect(urlFile).ToNot(ExistOnFilesystem())
+					Expect(urlFile).ToNot(BeAnExistingFile())
 
 					_, err := command.Run(destDir, request)
 					Expect(err).ToNot(HaveOccurred())
@@ -166,7 +166,7 @@ var _ = Describe("In Command", func() {
 					Expect(objectPath).To(Equal("folder/file-3.53.tgz"))
 					Expect(generation).To(Equal(int64(0)))
 
-					Expect(urlFile).To(ExistOnFilesystem())
+					Expect(urlFile).To(BeAnExistingFile())
 					contents, err := ioutil.ReadFile(urlFile)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(string(contents)).To(Equal("gs://bucket-name/folder/file-3.53.tgz"))
@@ -219,12 +219,12 @@ var _ = Describe("In Command", func() {
 				})
 
 				It("creates the destination directory", func() {
-					Expect(destDir).ToNot(ExistOnFilesystem())
+					Expect(destDir).ToNot(BeAnExistingFile())
 
 					_, err := command.Run(destDir, request)
 					Expect(err).ToNot(HaveOccurred())
 
-					Expect(destDir).To(ExistOnFilesystem())
+					Expect(destDir).To(BeAnExistingFile())
 				})
 
 				It("downloads the existing version of the file", func() {
@@ -242,12 +242,12 @@ var _ = Describe("In Command", func() {
 
 				It("creates a 'version' file that contains the matched version", func() {
 					versionFile := filepath.Join(destDir, "version")
-					Expect(versionFile).ToNot(ExistOnFilesystem())
+					Expect(versionFile).ToNot(BeAnExistingFile())
 
 					_, err := command.Run(destDir, request)
 					Expect(err).ToNot(HaveOccurred())
 
-					Expect(versionFile).To(ExistOnFilesystem())
+					Expect(versionFile).To(BeAnExistingFile())
 					contents, err := ioutil.ReadFile(versionFile)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(string(contents)).To(Equal("1.3"))
@@ -257,19 +257,19 @@ var _ = Describe("In Command", func() {
 					request.Version.Path = "folder/file.tgz"
 
 					versionFile := filepath.Join(destDir, "version")
-					Expect(versionFile).ToNot(ExistOnFilesystem())
+					Expect(versionFile).ToNot(BeAnExistingFile())
 
 					_, err := command.Run(destDir, request)
 					Expect(err).ToNot(HaveOccurred())
 
-					Expect(versionFile).ToNot(ExistOnFilesystem())
+					Expect(versionFile).ToNot(BeAnExistingFile())
 				})
 
 				It("creates a 'url' file that contains the URL", func() {
 					gcsClient.URLReturns("gs://bucket-name/folder/file-1.3.tgz", nil)
 
 					urlFile := filepath.Join(destDir, "url")
-					Expect(urlFile).ToNot(ExistOnFilesystem())
+					Expect(urlFile).ToNot(BeAnExistingFile())
 
 					_, err := command.Run(destDir, request)
 					Expect(err).ToNot(HaveOccurred())
@@ -279,7 +279,7 @@ var _ = Describe("In Command", func() {
 					Expect(objectPath).To(Equal("folder/file-1.3.tgz"))
 					Expect(generation).To(Equal(int64(0)))
 
-					Expect(urlFile).To(ExistOnFilesystem())
+					Expect(urlFile).To(BeAnExistingFile())
 					contents, err := ioutil.ReadFile(urlFile)
 					Expect(err).ToNot(HaveOccurred())
 					Expect(string(contents)).To(Equal("gs://bucket-name/folder/file-1.3.tgz"))
@@ -326,12 +326,12 @@ var _ = Describe("In Command", func() {
 			})
 
 			It("creates the destination directory", func() {
-				Expect(destDir).ToNot(ExistOnFilesystem())
+				Expect(destDir).ToNot(BeAnExistingFile())
 
 				_, err := command.Run(destDir, request)
 				Expect(err).ToNot(HaveOccurred())
 
-				Expect(destDir).To(ExistOnFilesystem())
+				Expect(destDir).To(BeAnExistingFile())
 			})
 
 			It("downloads the versioned file", func() {
@@ -349,12 +349,12 @@ var _ = Describe("In Command", func() {
 
 			It("creates a 'generation' file that contains the generation", func() {
 				generationFile := filepath.Join(destDir, "generation")
-				Expect(generationFile).ToNot(ExistOnFilesystem())
+				Expect(generationFile).ToNot(BeAnExistingFile())
 
 				_, err := command.Run(destDir, request)
 				Expect(err).ToNot(HaveOccurred())
 
-				Expect(generationFile).To(ExistOnFilesystem())
+				Expect(generationFile).To(BeAnExistingFile())
 				contents, err := ioutil.ReadFile(generationFile)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(string(contents)).To(Equal("12345"))
@@ -364,7 +364,7 @@ var _ = Describe("In Command", func() {
 				gcsClient.URLReturns("gs://bucket-name/folder/version#12345", nil)
 
 				urlFile := filepath.Join(destDir, "url")
-				Expect(urlFile).ToNot(ExistOnFilesystem())
+				Expect(urlFile).ToNot(BeAnExistingFile())
 
 				_, err := command.Run(destDir, request)
 				Expect(err).ToNot(HaveOccurred())
@@ -374,7 +374,7 @@ var _ = Describe("In Command", func() {
 				Expect(objectPath).To(Equal("folder/version"))
 				Expect(generation).To(Equal(int64(12345)))
 
-				Expect(urlFile).To(ExistOnFilesystem())
+				Expect(urlFile).To(BeAnExistingFile())
 				contents, err := ioutil.ReadFile(urlFile)
 				Expect(err).ToNot(HaveOccurred())
 				Expect(string(contents)).To(Equal("gs://bucket-name/folder/version#12345"))
