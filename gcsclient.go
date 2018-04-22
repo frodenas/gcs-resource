@@ -14,6 +14,7 @@ import (
 	"gopkg.in/cheggaaa/pb.v1"
 )
 
+//go:generate counterfeiter -o fakes/fake_gcsclient.go . GCSClient
 type GCSClient interface {
 	BucketObjects(bucketName string, prefix string) ([]string, error)
 	ObjectGenerations(bucketName string, objectPath string) ([]int64, error)
