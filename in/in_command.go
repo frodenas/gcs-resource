@@ -116,9 +116,22 @@ func (command *InCommand) inByVersionedFile(destinationDir string, request InReq
 		return InResponse{}, err
 	}
 
-	//if err := command.downloadFile(bucketName, objectPath, generation, destinationDir); err != nil {
-	//	return InResponse{}, err
-	//}
+	localPath, err := command.gcsClient.DownloadFile(bucketName, objectPath, generation)
+	if err != nil {
+		return InResponse{}, err
+	}
+
+	destinationPath := filepath.Join(destinationDir, filepath.Base(objectPath))
+
+	if request.Params.Unpack {
+		if err := command.unpackFile(localPath, destinationPath); err != nil {
+			return InResponse{}, err
+		}
+	} else {
+		if err := os.Rename(localPath, destinationPath); err != nil {
+			return InResponse{}, err
+		}
+	}
 
 	if err := command.writeGenerationFile(generation, destinationDir); err != nil {
 		return InResponse{}, err
