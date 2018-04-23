@@ -40,6 +40,7 @@ var _ = Describe("In Command", func() {
 			}
 
 			gcsClient = &fakes.FakeGCSClient{}
+			gcsClient.DownloadFileStub = gcsDownloadTaskStub("file.txt")
 			command = NewInCommand(gcsClient)
 		})
 
@@ -96,12 +97,11 @@ var _ = Describe("In Command", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(gcsClient.DownloadFileCallCount()).To(Equal(1))
-					bucketName, objectPath, generation, localPath := gcsClient.DownloadFileArgsForCall(0)
+					bucketName, objectPath, generation := gcsClient.DownloadFileArgsForCall(0)
 
 					Expect(bucketName).To(Equal("bucket-name"))
 					Expect(objectPath).To(Equal("folder/file-1.5.6-build.100.tgz"))
 					Expect(generation).To(Equal(int64(0)))
-					Expect(localPath).To(Equal(filepath.Join(destDir, "file-1.5.6-build.100.tgz")))
 				})
 			})
 
@@ -131,12 +131,11 @@ var _ = Describe("In Command", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(gcsClient.DownloadFileCallCount()).To(Equal(1))
-					bucketName, objectPath, generation, localPath := gcsClient.DownloadFileArgsForCall(0)
+					bucketName, objectPath, generation := gcsClient.DownloadFileArgsForCall(0)
 
 					Expect(bucketName).To(Equal("bucket-name"))
 					Expect(objectPath).To(Equal("folder/file-3.53.tgz"))
 					Expect(generation).To(Equal(int64(0)))
-					Expect(localPath).To(Equal(filepath.Join(destDir, "file-3.53.tgz")))
 				})
 
 				It("creates a 'version' file that contains the latest version", func() {
@@ -197,7 +196,7 @@ var _ = Describe("In Command", func() {
 				})
 
 				It("returns an error if download fails", func() {
-					gcsClient.DownloadFileReturns(errors.New("error downloading file"))
+					gcsClient.DownloadFileReturns("", errors.New("error downloading file"))
 
 					_, err := command.Run(destDir, request)
 					Expect(err).To(HaveOccurred())
@@ -232,12 +231,11 @@ var _ = Describe("In Command", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(gcsClient.DownloadFileCallCount()).To(Equal(1))
-					bucketName, objectPath, generation, localPath := gcsClient.DownloadFileArgsForCall(0)
+					bucketName, objectPath, generation := gcsClient.DownloadFileArgsForCall(0)
 
 					Expect(bucketName).To(Equal("bucket-name"))
 					Expect(objectPath).To(Equal("folder/file-1.3.tgz"))
 					Expect(generation).To(Equal(int64(0)))
-					Expect(localPath).To(Equal(filepath.Join(destDir, "file-1.3.tgz")))
 				})
 
 				It("creates a 'version' file that contains the matched version", func() {
@@ -302,7 +300,7 @@ var _ = Describe("In Command", func() {
 				})
 
 				It("returns an error if download fails", func() {
-					gcsClient.DownloadFileReturns(errors.New("error downloading file"))
+					gcsClient.DownloadFileReturns("", errors.New("error downloading file"))
 
 					_, err := command.Run(destDir, request)
 					Expect(err).To(HaveOccurred())
@@ -315,6 +313,86 @@ var _ = Describe("In Command", func() {
 					_, err := command.Run(destDir, request)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("error url"))
+				})
+			})
+
+			Describe("when 'unpack' is specified", func() {
+				BeforeEach(func() {
+					request.Version.Path = "some-file-path"
+					request.Params.Unpack = true
+				})
+
+				Context("when a zip file is returned", func() {
+
+					BeforeEach(func() {
+						gcsClient.DownloadFileStub = gcsDownloadTaskStub("file-0.zip")
+					})
+
+					It("extracts the zip file to the destination dir", func() {
+						_, err := command.Run(destDir, request)
+						Expect(err).NotTo(HaveOccurred())
+
+						contents, _ := ioutil.ReadFile(filepath.Join(destDir, "file-0.txt"))
+						Expect(string(contents)).To(Equal("some-zip-file-content"))
+					})
+				})
+
+				Context("when a tar file is returned", func() {
+
+					BeforeEach(func() {
+						gcsClient.DownloadFileStub = gcsDownloadTaskStub("file-0.tar")
+					})
+
+					It("extracts the tar file to the destination dir", func() {
+						_, err := command.Run(destDir, request)
+						Expect(err).NotTo(HaveOccurred())
+
+						contents, _ := ioutil.ReadFile(filepath.Join(destDir, "file-0.txt"))
+						Expect(string(contents)).To(Equal("some-tar-file-content"))
+					})
+				})
+
+				Context("when a gzip file is returned", func() {
+
+					BeforeEach(func() {
+						gcsClient.DownloadFileStub = gcsDownloadTaskStub("file-0.txt.gz")
+					})
+
+					It("extracts the gzip file to the destination dir", func() {
+						_, err := command.Run(destDir, request)
+						Expect(err).NotTo(HaveOccurred())
+
+						contents, _ := ioutil.ReadFile(filepath.Join(destDir, "file-0.txt"))
+						Expect(string(contents)).To(Equal("some-gzip-file-content"))
+					})
+				})
+
+				Context("when a tgz file is returned", func() {
+
+					BeforeEach(func() {
+						gcsClient.DownloadFileStub = gcsDownloadTaskStub("file-0.tgz")
+					})
+
+					It("extracts the tgz file to the destination dir", func() {
+						_, err := command.Run(destDir, request)
+						Expect(err).NotTo(HaveOccurred())
+
+						contents, _ := ioutil.ReadFile(filepath.Join(destDir, "file-0.txt"))
+						Expect(string(contents)).To(Equal("some-tgz-file-content"))
+					})
+				})
+
+				Context("when an uncompressed or unsupported file is returned", func() {
+
+					BeforeEach(func() {
+						gcsClient.DownloadFileStub = gcsDownloadTaskStub("file.txt")
+					})
+
+					It("returns an error to the user", func() {
+						_, err := command.Run(destDir, request)
+						Expect(err).To(HaveOccurred())
+						Expect(err.Error()).To(ContainSubstring("failed to extract 'file.txt' with the 'params.unpack' option enabled"))
+					})
 				})
 			})
 		})
@@ -339,12 +417,11 @@ var _ = Describe("In Command", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(gcsClient.DownloadFileCallCount()).To(Equal(1))
-				bucketName, objectPath, generation, localPath := gcsClient.DownloadFileArgsForCall(0)
+				bucketName, objectPath, generation := gcsClient.DownloadFileArgsForCall(0)
 
 				Expect(bucketName).To(Equal("bucket-name"))
 				Expect(objectPath).To(Equal("folder/version"))
 				Expect(generation).To(Equal(int64(12345)))
-				Expect(localPath).To(Equal(filepath.Join(destDir, "version")))
 			})
 
 			It("creates a 'generation' file that contains the generation", func() {
@@ -397,7 +474,7 @@ var _ = Describe("In Command", func() {
 			})
 
 			It("returns an error if download fails", func() {
-				gcsClient.DownloadFileReturns(errors.New("error downloading file"))
+				gcsClient.DownloadFileReturns("", errors.New("error downloading file"))
 
 				_, err := command.Run(destDir, request)
 				Expect(err).To(HaveOccurred())

@@ -7,6 +7,10 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/onsi/gomega/gexec"
+	"path/filepath"
+	"os"
+	"io"
+	"io/ioutil"
 )
 
 var inPath string
@@ -25,4 +29,27 @@ var _ = AfterSuite(func() {
 func TestIn(t *testing.T) {
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "In Suite")
+}
+
+type gcsDownloadTask func(bucketName string, objectPath string, generation int64) (string, error)
+
+func gcsDownloadTaskStub(name string) gcsDownloadTask {
+	return func(bucketName string, objectPath string, generation int64) (string, error) {
+		sourcePath := filepath.Join("fixtures", name)
+		Expect(sourcePath).To(BeAnExistingFile())
+
+		from, err := os.Open(sourcePath)
+		Expect(err).NotTo(HaveOccurred())
+		defer from.Close()
+
+		tempDir, err := ioutil.TempDir("", "in_command_test_")
+		Expect(err).NotTo(HaveOccurred())
+
+		to, err := os.OpenFile(filepath.Join(tempDir, name), os.O_RDWR|os.O_CREATE, 0600)
+		defer to.Close()
+
+		_, err = io.Copy(to, from)
+		Expect(err).NotTo(HaveOccurred())
+		return to.Name(), nil
+	}
 }
