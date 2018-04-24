@@ -89,10 +89,10 @@ var _ = Describe("GCSclient", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fileTwoURL).To(Equal(fmt.Sprintf("gs://%s/%s", bucketName, filepath.Join(directoryPrefix, "file-to-upload-2"))))
 
-			tempFile, err := gcsClient.DownloadFile(bucketName, filepath.Join(directoryPrefix, "file-to-upload-1"), 0)
+			err = gcsClient.DownloadFile(bucketName, filepath.Join(directoryPrefix, "file-to-upload-1"), 0, filepath.Join(tempDir, "downloaded-file"))
 			Expect(err).ToNot(HaveOccurred())
 
-			read, err := ioutil.ReadFile(tempFile)
+			read, err := ioutil.ReadFile(filepath.Join(tempDir, "downloaded-file"))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(read).To(Equal([]byte("hello-" + runtime)))
 		})
@@ -192,10 +192,10 @@ var _ = Describe("GCSclient", func() {
 			Expect(err).ToNot(HaveOccurred())
 			Expect(fileTwoURLGeneration2).To(Equal(fmt.Sprintf("gs://%s/%s#%d", versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-2"), fileTwoGeneration2)))
 
-			tempFile, err := gcsClient.DownloadFile(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-1"), 0)
+			err = gcsClient.DownloadFile(versionedBucketName, filepath.Join(directoryPrefix, "file-to-upload-1"), 0, filepath.Join(tempVerDir, "downloaded-file"))
 			Expect(err).ToNot(HaveOccurred())
 
-			read, err := ioutil.ReadFile(tempFile)
+			read, err := ioutil.ReadFile(filepath.Join(tempVerDir, "downloaded-file"))
 			Expect(err).ToNot(HaveOccurred())
 			Expect(read).To(Equal([]byte("hello-" + runtime)))
 		})

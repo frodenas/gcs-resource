@@ -12,14 +12,12 @@ import (
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/storage/v1"
 	"gopkg.in/cheggaaa/pb.v1"
-	"io/ioutil"
 )
 
-//go:generate counterfeiter -o fakes/fake_gcsclient.go . GCSClient
 type GCSClient interface {
 	BucketObjects(bucketName string, prefix string) ([]string, error)
 	ObjectGenerations(bucketName string, objectPath string) ([]int64, error)
-	DownloadFile(bucketName string, objectPath string, generation int64) (string, error)
+	DownloadFile(bucketName string, objectPath string, generation int64, localPath string) error
 	UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string) (int64, error)
 	URL(bucketName string, objectPath string, generation int64) (string, error)
 	DeleteObject(bucketName string, objectPath string, generation int64) error
@@ -91,14 +89,14 @@ func (gcsclient *gcsclient) ObjectGenerations(bucketName string, objectPath stri
 	return objectGenerations, nil
 }
 
-func (gcsclient *gcsclient) DownloadFile(bucketName string, objectPath string, generation int64) (string, error) {
+func (gcsclient *gcsclient) DownloadFile(bucketName string, objectPath string, generation int64, localPath string) error {
 	isBucketVersioned, err := gcsclient.getBucketVersioning(bucketName)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	if !isBucketVersioned && generation != 0 {
-		return "", errors.New("bucket is not versioned")
+		return errors.New("bucket is not versioned")
 	}
 
 	getCall := gcsclient.storageService.Objects.Get(bucketName, objectPath)
@@ -108,12 +106,12 @@ func (gcsclient *gcsclient) DownloadFile(bucketName string, objectPath string, g
 
 	object, err := getCall.Do()
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	localFile, err := ioutil.TempFile(os.TempDir(), "gcsresource-")
+	localFile, err := os.Create(localPath)
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer localFile.Close()
 
@@ -123,17 +121,17 @@ func (gcsclient *gcsclient) DownloadFile(bucketName string, objectPath string, g
 
 	response, err := getCall.Download()
 	if err != nil {
-		return "", err
+		return err
 	}
 	defer response.Body.Close()
 
 	reader := progress.NewProxyReader(response.Body)
 	_, err = io.Copy(localFile, reader)
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	return localFile.Name(), nil
+	return nil
 }
 
 func (gcsclient *gcsclient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string) (int64, error) {

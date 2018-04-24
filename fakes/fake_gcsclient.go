@@ -4,7 +4,7 @@ package fakes
 import (
 	"sync"
 
-	gcsresource "github.com/frodenas/gcs-resource"
+	"github.com/frodenas/gcs-resource"
 	storage "google.golang.org/api/storage/v1"
 )
 
@@ -37,20 +37,19 @@ type FakeGCSClient struct {
 		result1 []int64
 		result2 error
 	}
-	DownloadFileStub        func(bucketName string, objectPath string, generation int64) (string, error)
+	DownloadFileStub        func(bucketName string, objectPath string, generation int64, localPath string) error
 	downloadFileMutex       sync.RWMutex
 	downloadFileArgsForCall []struct {
 		bucketName string
 		objectPath string
 		generation int64
+		localPath  string
 	}
 	downloadFileReturns struct {
-		result1 string
-		result2 error
+		result1 error
 	}
 	downloadFileReturnsOnCall map[int]struct {
-		result1 string
-		result2 error
+		result1 error
 	}
 	UploadFileStub        func(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string) (int64, error)
 	uploadFileMutex       sync.RWMutex
@@ -219,23 +218,24 @@ func (fake *FakeGCSClient) ObjectGenerationsReturnsOnCall(i int, result1 []int64
 	}{result1, result2}
 }
 
-func (fake *FakeGCSClient) DownloadFile(bucketName string, objectPath string, generation int64) (string, error) {
+func (fake *FakeGCSClient) DownloadFile(bucketName string, objectPath string, generation int64, localPath string) error {
 	fake.downloadFileMutex.Lock()
 	ret, specificReturn := fake.downloadFileReturnsOnCall[len(fake.downloadFileArgsForCall)]
 	fake.downloadFileArgsForCall = append(fake.downloadFileArgsForCall, struct {
 		bucketName string
 		objectPath string
 		generation int64
-	}{bucketName, objectPath, generation})
-	fake.recordInvocation("DownloadFile", []interface{}{bucketName, objectPath, generation})
+		localPath  string
+	}{bucketName, objectPath, generation, localPath})
+	fake.recordInvocation("DownloadFile", []interface{}{bucketName, objectPath, generation, localPath})
 	fake.downloadFileMutex.Unlock()
 	if fake.DownloadFileStub != nil {
-		return fake.DownloadFileStub(bucketName, objectPath, generation)
+		return fake.DownloadFileStub(bucketName, objectPath, generation, localPath)
 	}
 	if specificReturn {
-		return ret.result1, ret.result2
+		return ret.result1
 	}
-	return fake.downloadFileReturns.result1, fake.downloadFileReturns.result2
+	return fake.downloadFileReturns.result1
 }
 
 func (fake *FakeGCSClient) DownloadFileCallCount() int {
@@ -244,32 +244,29 @@ func (fake *FakeGCSClient) DownloadFileCallCount() int {
 	return len(fake.downloadFileArgsForCall)
 }
 
-func (fake *FakeGCSClient) DownloadFileArgsForCall(i int) (string, string, int64) {
+func (fake *FakeGCSClient) DownloadFileArgsForCall(i int) (string, string, int64, string) {
 	fake.downloadFileMutex.RLock()
 	defer fake.downloadFileMutex.RUnlock()
-	return fake.downloadFileArgsForCall[i].bucketName, fake.downloadFileArgsForCall[i].objectPath, fake.downloadFileArgsForCall[i].generation
+	return fake.downloadFileArgsForCall[i].bucketName, fake.downloadFileArgsForCall[i].objectPath, fake.downloadFileArgsForCall[i].generation, fake.downloadFileArgsForCall[i].localPath
 }
 
-func (fake *FakeGCSClient) DownloadFileReturns(result1 string, result2 error) {
+func (fake *FakeGCSClient) DownloadFileReturns(result1 error) {
 	fake.DownloadFileStub = nil
 	fake.downloadFileReturns = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
-func (fake *FakeGCSClient) DownloadFileReturnsOnCall(i int, result1 string, result2 error) {
+func (fake *FakeGCSClient) DownloadFileReturnsOnCall(i int, result1 error) {
 	fake.DownloadFileStub = nil
 	if fake.downloadFileReturnsOnCall == nil {
 		fake.downloadFileReturnsOnCall = make(map[int]struct {
-			result1 string
-			result2 error
+			result1 error
 		})
 	}
 	fake.downloadFileReturnsOnCall[i] = struct {
-		result1 string
-		result2 error
-	}{result1, result2}
+		result1 error
+	}{result1}
 }
 
 func (fake *FakeGCSClient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string) (int64, error) {

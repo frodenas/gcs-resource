@@ -1,16 +1,15 @@
 package in_test
 
 import (
+	"fmt"
+	"os"
 	"testing"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
 	"github.com/onsi/gomega/gexec"
-	"io"
-	"io/ioutil"
-	"os"
-	"path/filepath"
+	"github.com/onsi/gomega/types"
 )
 
 var inPath string
@@ -31,25 +30,33 @@ func TestIn(t *testing.T) {
 	RunSpecs(t, "In Suite")
 }
 
-type gcsDownloadTask func(bucketName string, objectPath string, generation int64) (string, error)
+func ExistOnFilesystem() types.GomegaMatcher {
+	return &existOnFilesystemMatcher{}
+}
 
-func gcsDownloadTaskStub(name string) gcsDownloadTask {
-	return func(bucketName string, objectPath string, generation int64) (string, error) {
-		sourcePath := filepath.Join("fixtures", name)
-		Expect(sourcePath).To(BeAnExistingFile())
+type existOnFilesystemMatcher struct {
+	expected interface{}
+}
 
-		from, err := os.Open(sourcePath)
-		Expect(err).NotTo(HaveOccurred())
-		defer from.Close()
-
-		tempDir, err := ioutil.TempDir("", "in_command_test_")
-		Expect(err).NotTo(HaveOccurred())
-
-		to, err := os.OpenFile(filepath.Join(tempDir, name), os.O_RDWR|os.O_CREATE, 0600)
-		defer to.Close()
-
-		_, err = io.Copy(to, from)
-		Expect(err).NotTo(HaveOccurred())
-		return to.Name(), nil
+func (matcher *existOnFilesystemMatcher) Match(actual interface{}) (success bool, err error) {
+	path, ok := actual.(string)
+	if !ok {
+		return false, fmt.Errorf("ExistOnFilesystem matcher expects a string")
 	}
+
+	if _, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			return false, nil
+		}
+	}
+
+	return true, nil
+}
+
+func (matcher *existOnFilesystemMatcher) FailureMessage(actual interface{}) (message string) {
+	return fmt.Sprintf("Expected\n\t%#v\nto exist on the filesystem", actual)
+}
+
+func (matcher *existOnFilesystemMatcher) NegatedFailureMessage(actual interface{}) (message string) {
+	return fmt.Sprintf("Expected\n\t%#v\nnot to exist on the filesystem", actual)
 }
