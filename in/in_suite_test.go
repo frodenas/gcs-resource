@@ -7,10 +7,10 @@ import (
 	. "github.com/onsi/gomega"
 
 	"github.com/onsi/gomega/gexec"
-	"path/filepath"
-	"os"
 	"io"
 	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 var inPath string

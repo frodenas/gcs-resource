@@ -178,7 +178,7 @@ func (command *InCommand) unpackFile(sourcePath, destinationPath string) error {
 	}
 
 	if !isSupportedMimeType(mimeType) {
-		return fmt.Errorf(errorMessage, fileName, "unsupported MIME type "+ mimeType)
+		return fmt.Errorf(errorMessage, fileName, "unsupported MIME type "+mimeType)
 	}
 
 	if err := unpack(mimeType, sourcePath, destinationPath); err != nil {

@@ -13,15 +13,15 @@ import (
 )
 
 const (
-	mimeTypeZip = "application/zip"
-	mimeTypeTar = "application/x-tar"
+	mimeTypeZip  = "application/zip"
+	mimeTypeTar  = "application/x-tar"
 	mimeTypeGzip = "application/gzip"
 )
 
 func isSupportedMimeType(mimeType string) bool {
 	return mimeType == mimeTypeZip ||
-	mimeType == mimeTypeTar ||
-	mimeType == mimeTypeGzip
+		mimeType == mimeTypeTar ||
+		mimeType == mimeTypeGzip
 }
 
 func getMimeType(path string) (string, error) {
@@ -100,7 +100,7 @@ func unpackZip(sourcePath, destinationDir string) error {
 				return err
 			}
 
-			outFile, err := os.OpenFile(fpath, os.O_WRONLY | os.O_CREATE | os.O_TRUNC, f.Mode())
+			outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if err != nil {
 				return err
 			}
@@ -174,7 +174,7 @@ func unpackTar(sourcePath, destinationDir string) error {
 			continue
 		}
 
-		file, err := os.OpenFile(path, os.O_CREATE | os.O_TRUNC | os.O_WRONLY, info.Mode())
+		file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, info.Mode())
 		if err != nil {
 			return err
 		}

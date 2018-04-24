@@ -7,7 +7,7 @@ import (
 type InRequest struct {
 	Source  gcsresource.Source  `json:"source"`
 	Version gcsresource.Version `json:"version"`
-	Params  Params `json:"params"`
+	Params  Params              `json:"params"`
 }
 
 type Params struct {
