@@ -51,8 +51,21 @@ func (command *InCommand) inByRegex(destinationDir string, request InRequest) (I
 		return InResponse{}, err
 	}
 
-	if err := command.downloadFile(bucketName, objectPath, 0, destinationDir); err != nil {
+	localPath, err := command.gcsClient.DownloadFile(bucketName, objectPath, 0)
+	if err != nil {
 		return InResponse{}, err
+	}
+
+	destinationPath := filepath.Join(destinationDir, filepath.Base(objectPath))
+
+	if request.Params.Unpack {
+		if err := command.unpackFile(localPath, destinationPath); err != nil {
+			return InResponse{}, err
+		}
+	} else {
+		if err := os.Rename(localPath, destinationPath); err != nil {
+			return InResponse{}, err
+		}
 	}
 
 	version, ok := versions.Extract(objectPath, request.Source.Regexp)
@@ -103,8 +116,21 @@ func (command *InCommand) inByVersionedFile(destinationDir string, request InReq
 		return InResponse{}, err
 	}
 
-	if err := command.downloadFile(bucketName, objectPath, generation, destinationDir); err != nil {
+	localPath, err := command.gcsClient.DownloadFile(bucketName, objectPath, generation)
+	if err != nil {
 		return InResponse{}, err
+	}
+
+	destinationPath := filepath.Join(destinationDir, filepath.Base(objectPath))
+
+	if request.Params.Unpack {
+		if err := command.unpackFile(localPath, destinationPath); err != nil {
+			return InResponse{}, err
+		}
+	} else {
+		if err := os.Rename(localPath, destinationPath); err != nil {
+			return InResponse{}, err
+		}
 	}
 
 	if err := command.writeGenerationFile(generation, destinationDir); err != nil {
@@ -140,15 +166,26 @@ func (command *InCommand) writeURLFile(url string, destinationDir string) error 
 	return ioutil.WriteFile(filepath.Join(destinationDir, "url"), []byte(url), 0644)
 }
 
-func (command *InCommand) downloadFile(bucketName string, objectPath string, generation int64, destinationDir string) error {
-	localPath := filepath.Join(destinationDir, filepath.Base(objectPath))
-
-	return command.gcsClient.DownloadFile(
-		bucketName,
-		objectPath,
-		generation,
-		localPath,
+func (command *InCommand) unpackFile(sourcePath, destinationPath string) error {
+	var (
+		errorMessage = "failed to extract '%s' with the 'params.unpack' option enabled: %s"
+		fileName     = filepath.Base(sourcePath)
 	)
+
+	mimeType, err := getMimeType(sourcePath)
+	if err != nil {
+		return fmt.Errorf(errorMessage, fileName, err)
+	}
+
+	if !isSupportedMimeType(mimeType) {
+		return fmt.Errorf(errorMessage, fileName, "unsupported MIME type "+mimeType)
+	}
+
+	if err := unpack(mimeType, sourcePath, destinationPath); err != nil {
+		return fmt.Errorf(errorMessage, fileName, err)
+	}
+
+	return nil
 }
 
 func (command *InCommand) metadata(objectPath string, url string) []gcsresource.MetadataPair {

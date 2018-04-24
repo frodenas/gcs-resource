@@ -2,3 +2,4 @@ assets
 *\.test
 .idea
 .vscode
+.DS_Store
