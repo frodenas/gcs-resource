@@ -33,6 +33,12 @@
   version = "v1.0.0"
 
 [[projects]]
+  name = "github.com/h2non/filetype"
+  packages = ["."]
+  revision = "cc14fdc9ca0e4c2bafad7458f6ff79fd3947cfbb"
+  version = "v1.0.5"
+
+[[projects]]
   name = "github.com/mattn/go-runewidth"
   packages = ["."]
   revision = "9e777a8366cce605130a531d2cd6363d07ad7317"
@@ -208,6 +214,15 @@
   version = "v1.0.21"
 
 [[projects]]
+  name = "gopkg.in/h2non/filetype.v1"
+  packages = [
+    "matchers",
+    "types"
+  ]
+  revision = "cc14fdc9ca0e4c2bafad7458f6ff79fd3947cfbb"
+  version = "v1.0.5"
+
+[[projects]]
   branch = "v2"
   name = "gopkg.in/yaml.v2"
   packages = ["."]
@@ -216,6 +231,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b6761248e09a0c79e5a49510d58e9aaa0411591ad1c75fe417520cf008949220"
+  inputs-digest = "2a1e3243d338a05d5e3a0b3fa4589d71cf5f80f409cdfb18fe274d7141f6aa35"
   solver-name = "gps-cdcl"
   solver-version = 1
