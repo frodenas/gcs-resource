@@ -44,35 +44,30 @@ func getMimeType(path string) (string, error) {
 	return kind.MIME.Value, nil
 }
 
-func unpack(mimeType, sourcePath, destinationPath string) error {
-	var (
-		mType = mimeType
-		sPath = sourcePath
-	)
-
-	for mType == mimeTypeGzip {
+func unpack(mimeType, sourcePath string) error {
+	for mimeType == mimeTypeGzip {
 		var err error
-		sPath, err = unpackGzip(sPath)
+		sourcePath, err = unpackGzip(sourcePath)
 		if err != nil {
 			return err
 		}
 
-		mType, err = getMimeType(sPath)
+		mimeType, err = getMimeType(sourcePath)
 		if err != nil {
 			return err
 		}
 	}
 
-	destinationDir := filepath.Dir(destinationPath)
+	destinationDir := filepath.Dir(sourcePath)
 
-	switch mType {
+	switch mimeType {
 	case mimeTypeZip:
-		return unpackZip(sPath, destinationDir)
+		return unpackZip(sourcePath, destinationDir)
 	case mimeTypeTar:
-		return unpackTar(sPath, destinationDir)
-	default:
-		return os.Rename(sPath, filepath.Join(destinationDir, filepath.Base(sPath)))
+		return unpackTar(sourcePath, destinationDir)
 	}
+
+	return nil
 }
 
 func unpackZip(sourcePath, destinationDir string) error {
