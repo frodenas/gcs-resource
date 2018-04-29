@@ -57,6 +57,12 @@ func (command *InCommand) inByRegex(destinationDir string, request InRequest) (I
 		return InResponse{}, err
 	}
 
+	if request.Params.Unpack {
+		if err := command.unpackFile(localPath); err != nil {
+			return InResponse{}, err
+		}
+	}
+
 	version, ok := versions.Extract(objectPath, request.Source.Regexp)
 	if ok {
 		err := command.writeVersionFile(version.VersionNumber, destinationDir)

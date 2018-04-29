@@ -316,6 +316,95 @@ var _ = Describe("In Command", func() {
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("error url"))
 				})
+
+				Describe("when 'unpack' is specified", func() {
+					BeforeEach(func() {
+						request.Params.Unpack = true
+					})
+
+					Context("when a zip file is returned", func() {
+
+						BeforeEach(func() {
+							request.Version.Path = "file-0.zip"
+
+							gcsClient.DownloadFileStub = gcsDownloadTaskStub("file-0.zip")
+						})
+
+						It("extracts the zip file to the destination dir", func() {
+							_, err := command.Run(destDir, request)
+							Expect(err).NotTo(HaveOccurred())
+
+							contents, _ := ioutil.ReadFile(filepath.Join(destDir, "file-0.txt"))
+							Expect(string(contents)).To(Equal("some-zip-file-content"))
+						})
+					})
+
+					Context("when a tar file is returned", func() {
+
+						BeforeEach(func() {
+							request.Version.Path = "file-0.tar"
+
+							gcsClient.DownloadFileStub = gcsDownloadTaskStub("file-0.tar")
+						})
+
+						It("extracts the tar file to the destination dir", func() {
+							_, err := command.Run(destDir, request)
+							Expect(err).NotTo(HaveOccurred())
+
+							contents, _ := ioutil.ReadFile(filepath.Join(destDir, "file-0.txt"))
+							Expect(string(contents)).To(Equal("some-tar-file-content"))
+						})
+					})
+
+					Context("when a gzip file is returned", func() {
+
+						BeforeEach(func() {
+							request.Version.Path = "file-0.txt.gz"
+
+							gcsClient.DownloadFileStub = gcsDownloadTaskStub("file-0.txt.gz")
+						})
+
+						It("extracts the gzip file to the destination dir", func() {
+							_, err := command.Run(destDir, request)
+							Expect(err).NotTo(HaveOccurred())
+
+							contents, _ := ioutil.ReadFile(filepath.Join(destDir, "file-0.txt"))
+							Expect(string(contents)).To(Equal("some-gzip-file-content"))
+						})
+					})
+
+					Context("when a tgz file is returned", func() {
+
+						BeforeEach(func() {
+							request.Version.Path = "file-0.tgz"
+
+							gcsClient.DownloadFileStub = gcsDownloadTaskStub("file-0.tgz")
+						})
+
+						It("extracts the tgz file to the destination dir", func() {
+							_, err := command.Run(destDir, request)
+							Expect(err).NotTo(HaveOccurred())
+
+							contents, _ := ioutil.ReadFile(filepath.Join(destDir, "file-0.txt"))
+							Expect(string(contents)).To(Equal("some-tgz-file-content"))
+						})
+					})
+
+					Context("when an uncompressed or unsupported file is returned", func() {
+
+						BeforeEach(func() {
+							request.Version.Path = "file.txt"
+
+							gcsClient.DownloadFileStub = gcsDownloadTaskStub("file.txt")
+						})
+
+						It("returns an error to the user", func() {
+							_, err := command.Run(destDir, request)
+							Expect(err).To(HaveOccurred())
+							Expect(err.Error()).To(ContainSubstring("failed to extract 'file.txt' with the 'params.unpack' option enabled"))
+						})
+					})
+				})
 			})
 		})
 
