@@ -168,8 +168,8 @@ func (command *InCommand) downloadFile(bucketName string, objectPath string, gen
 func (command *InCommand) unpackFile(sourcePath string) error {
 
 	var (
-		errorMessage    = "failed to extract '%s' with the 'params.unpack' option enabled: %s"
-		fileName        = filepath.Base(sourcePath)
+		errorMessage = "failed to extract '%s' with the 'params.unpack' option enabled: %s"
+		fileName     = filepath.Base(sourcePath)
 	)
 
 	mimeType, err := getMimeType(sourcePath)
