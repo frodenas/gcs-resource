@@ -1,7 +1,7 @@
 package versions
 
 import (
-	"github.com/blang/semver"
+	"github.com/cppforlife/go-semi-semantic/version"
 )
 
 type Extractions []Extraction
@@ -11,7 +11,7 @@ func (e Extractions) Len() int {
 }
 
 func (e Extractions) Less(i int, j int) bool {
-	return e[i].Version.LT(e[j].Version)
+	return e[i].Version.IsLt(e[j].Version)
 }
 
 func (e Extractions) Swap(i int, j int) {
@@ -22,8 +22,8 @@ type Extraction struct {
 	// path to gcs object in bucket
 	Path string
 
-	// parsed semantic version
-	Version semver.Version
+	// parsed version
+	Version version.Version
 
 	// the raw version match
 	VersionNumber string

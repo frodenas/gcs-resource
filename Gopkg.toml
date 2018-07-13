@@ -26,10 +26,6 @@
 
 
 [[constraint]]
-  name = "github.com/blang/semver"
-  version = "3.5.1"
-
-[[constraint]]
   branch = "master"
   name = "github.com/mitchellh/colorstring"
 
