@@ -97,7 +97,7 @@ func newerVersions(lastVersion versions.Extraction, extractions versions.Extract
 	response := CheckResponse{}
 
 	for _, extraction := range extractions {
-		if extraction.Version.GT(lastVersion.Version) {
+		if extraction.Version.Compare(lastVersion.Version) > 0 {
 			version := gcsresource.Version{
 				Path: extraction.Path,
 			}

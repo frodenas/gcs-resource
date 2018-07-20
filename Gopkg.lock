@@ -8,10 +8,10 @@
   version = "v0.18.0"
 
 [[projects]]
-  name = "github.com/blang/semver"
-  packages = ["."]
-  revision = "2ee87856327ba09384cabd113bc6b5d174e9ec0f"
-  version = "v3.5.1"
+  branch = "master"
+  name = "github.com/cppforlife/go-semi-semantic"
+  packages = ["version"]
+  revision = "576b6af77ae4f3ccef356902fb3b9a9ae22e0b11"
 
 [[projects]]
   branch = "master"
@@ -231,6 +231,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2a1e3243d338a05d5e3a0b3fa4589d71cf5f80f409cdfb18fe274d7141f6aa35"
+  inputs-digest = "b83fc455f43cb51c3f2c0ff5e6548f00b236df37e8b848986de2c86c0a805457"
   solver-name = "gps-cdcl"
   solver-version = 1

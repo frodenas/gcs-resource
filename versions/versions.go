@@ -5,7 +5,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/blang/semver"
+	"github.com/cppforlife/go-semi-semantic/version"
 	"github.com/frodenas/gcs-resource"
 )
 
@@ -103,23 +103,14 @@ func Extract(path string, pattern string) (Extraction, bool) {
 		}
 	}
 
-	probablySemver := match
-	segs := strings.SplitN(probablySemver, ".", 3)
-	switch len(segs) {
-	case 2:
-		probablySemver += ".0"
-	case 1:
-		probablySemver += ".0.0"
-	}
-
-	version, err := semver.Parse(probablySemver)
+	ver, err := version.NewVersionFromString(match)
 	if err != nil {
 		panic("version number was not valid: " + err.Error())
 	}
 
 	extraction := Extraction{
 		Path:          path,
-		Version:       version,
+		Version:       ver,
 		VersionNumber: match,
 	}
 
