@@ -1,13 +1,13 @@
 package in
 
 import (
-	"archive/zip"
 	"bufio"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
+	"os/exec"
 
-	"archive/tar"
-	"compress/gzip"
 	"github.com/h2non/filetype"
 	"path/filepath"
 )
@@ -71,117 +71,34 @@ func unpack(mimeType, sourcePath string) error {
 }
 
 func unpackZip(sourcePath, destinationDir string) error {
-	r, err := zip.OpenReader(sourcePath)
-	if err != nil {
-		return err
-	}
-	defer r.Close()
+	cmd := exec.Command("unzip", "-P", "", "-d", destinationDir, sourcePath)
+	defer os.Remove(sourcePath)
 
-	for _, f := range r.File {
-		rc, err := f.Open()
-		if err != nil {
-			return err
-		}
-		defer rc.Close()
-
-		fpath := filepath.Join(destinationDir, f.Name)
-
-		if f.FileInfo().IsDir() {
-			if err := os.MkdirAll(fpath, os.ModePerm); err != nil {
-				return err
-			}
-		} else {
-			if err = os.MkdirAll(filepath.Dir(fpath), os.ModePerm); err != nil {
-				return err
-			}
-
-			outFile, err := os.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
-			if err != nil {
-				return err
-			}
-
-			_, err = io.Copy(outFile, rc)
-			outFile.Close()
-
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
+	return cmd.Run()
 }
 
 func unpackGzip(sourcePath string) (string, error) {
-	reader, err := os.Open(sourcePath)
+	cmd := exec.Command("gunzip", sourcePath)
+	err := cmd.Run()
 	if err != nil {
 		return "", err
 	}
-	defer reader.Close()
 
-	archive, err := gzip.NewReader(reader)
+	destinationDir := filepath.Dir(sourcePath)
+	fileInfos, err := ioutil.ReadDir(destinationDir)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("failed to read dir: %s", err)
 	}
-	defer archive.Close()
-
-	var destinationPath string
-	if archive.Name != "" {
-		destinationPath = filepath.Join(filepath.Dir(sourcePath), archive.Name)
-	} else {
-		destinationPath = sourcePath + ".uncompressed"
+	if len(fileInfos) != 1 {
+		return "", fmt.Errorf("%d files found after gunzip; expected 1", len(fileInfos))
 	}
 
-	writer, err := os.Create(destinationPath)
-	if err != nil {
-		return "", err
-	}
-	defer writer.Close()
-
-	_, err = io.Copy(writer, archive)
-	return destinationPath, err
+	return filepath.Join(destinationDir, fileInfos[0].Name()), err
 }
 
 func unpackTar(sourcePath, destinationDir string) error {
-	reader, err := os.Open(sourcePath)
-	if err != nil {
-		return err
-	}
-	defer reader.Close()
+	cmd := exec.Command("tar", "xf", sourcePath, "-C", destinationDir)
+	defer os.Remove(sourcePath)
 
-	tarReader := tar.NewReader(reader)
-
-	for {
-		header, err := tarReader.Next()
-		if err == io.EOF {
-			break
-		} else if err != nil {
-			return err
-		}
-
-		path := filepath.Join(destinationDir, header.Name)
-		info := header.FileInfo()
-		if info.IsDir() {
-			if err = os.MkdirAll(path, info.Mode()); err != nil {
-				return err
-			}
-
-			continue
-		}
-
-		file, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, info.Mode())
-		if err != nil {
-			return err
-		}
-
-		_, err = io.Copy(file, tarReader)
-		file.Close()
-		
-		if err != nil {
-			return err
-		}
-		
-	}
-
-	return nil
+	return cmd.Run()
 }
