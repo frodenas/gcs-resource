@@ -7,9 +7,9 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 
 	"github.com/h2non/filetype"
-	"path/filepath"
 )
 
 const (
@@ -72,7 +72,6 @@ func unpack(mimeType, sourcePath string) error {
 
 func unpackZip(sourcePath, destinationDir string) error {
 	cmd := exec.Command("unzip", "-P", "", "-d", destinationDir, sourcePath)
-	defer os.Remove(sourcePath)
 
 	return cmd.Run()
 }
@@ -98,7 +97,6 @@ func unpackGzip(sourcePath string) (string, error) {
 
 func unpackTar(sourcePath, destinationDir string) error {
 	cmd := exec.Command("tar", "xf", sourcePath, "-C", destinationDir)
-	defer os.Remove(sourcePath)
 
 	return cmd.Run()
 }
