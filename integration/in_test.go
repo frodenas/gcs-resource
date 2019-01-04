@@ -401,9 +401,7 @@ var _ = Describe("in", func() {
 			inRequest       in.InRequest
 			inResponse      in.InResponse
 			directoryPrefix string
-			generation1     int64
 			generation2     int64
-			generation3     int64
 		)
 
 		BeforeEach(func() {
@@ -422,7 +420,7 @@ var _ = Describe("in", func() {
 					err = ioutil.WriteFile(tempFile.Name(), []byte("generation-1"), 0755)
 					Expect(err).ToNot(HaveOccurred())
 
-					generation1, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "")
+					_, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "")
 					Expect(err).ToNot(HaveOccurred())
 
 					err = ioutil.WriteFile(tempFile.Name(), []byte("generation-2"), 0755)
@@ -434,7 +432,7 @@ var _ = Describe("in", func() {
 					err = ioutil.WriteFile(tempFile.Name(), []byte("generation-3"), 0755)
 					Expect(err).ToNot(HaveOccurred())
 
-					generation3, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "")
+					_, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version"), "", tempFile.Name(), "")
 					Expect(err).ToNot(HaveOccurred())
 
 					err = os.Remove(tempFile.Name())
