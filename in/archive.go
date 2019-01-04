@@ -2,9 +2,8 @@ package in
 
 import (
 	"bufio"
-	"fmt"
+	"compress/gzip"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -77,22 +76,33 @@ func unpackZip(sourcePath, destinationDir string) error {
 }
 
 func unpackGzip(sourcePath string) (string, error) {
-	cmd := exec.Command("gunzip", sourcePath)
-	err := cmd.Run()
+	reader, err := os.Open(sourcePath)
 	if err != nil {
 		return "", err
 	}
+	defer reader.Close()
 
-	destinationDir := filepath.Dir(sourcePath)
-	fileInfos, err := ioutil.ReadDir(destinationDir)
+	archive, err := gzip.NewReader(reader)
 	if err != nil {
-		return "", fmt.Errorf("failed to read dir: %s", err)
+		return "", err
 	}
-	if len(fileInfos) != 1 {
-		return "", fmt.Errorf("%d files found after gunzip; expected 1", len(fileInfos))
+	defer archive.Close()
+
+	var destinationPath string
+	if archive.Name != "" {
+		destinationPath = filepath.Join(filepath.Dir(sourcePath), archive.Name)
+	} else {
+		destinationPath = sourcePath + ".uncompressed"
 	}
 
-	return filepath.Join(destinationDir, fileInfos[0].Name()), err
+	writer, err := os.Create(destinationPath)
+	if err != nil {
+		return "", err
+	}
+	defer writer.Close()
+
+	_, err = io.Copy(writer, archive)
+	return destinationPath, err
 }
 
 func unpackTar(sourcePath, destinationDir string) error {
