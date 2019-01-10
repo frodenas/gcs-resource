@@ -70,7 +70,7 @@ func unpack(mimeType, sourcePath string) error {
 }
 
 func unpackZip(sourcePath, destinationDir string) error {
-	cmd := exec.Command("unzip", "-P", "", "-d", destinationDir, sourcePath)
+	cmd := exec.Command("unzip", "-d", destinationDir, sourcePath)
 
 	return cmd.Run()
 }
