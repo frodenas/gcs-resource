@@ -1,6 +1,7 @@
-FROM concourse/busyboxplus:git
+FROM alpine as certs
+RUN apk update && apk add ca-certificates
 
-# satisfy go crypto/x509
-RUN cat /etc/ssl/certs/*.pem > /etc/ssl/certs/ca-certificates.crt
+FROM busybox:1.30.1
+COPY --from=certs /etc/ssl/certs /etc/ssl/certs
 
 ADD assets/ /opt/resource/
