@@ -141,12 +141,13 @@ var _ = Describe("Out Command", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
-				bucketName, objectPath, objectContentType, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
+				bucketName, objectPath, objectContentType, localPath, predefinedACL, cacheControl := gcsClient.UploadFileArgsForCall(0)
 
 				Expect(bucketName).To(Equal("bucket-name"))
 				Expect(objectPath).To(Equal("folder/file.tgz"))
 				Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
 				Expect(predefinedACL).To(BeEmpty())
+				Expect(cacheControl).To(BeEmpty())
 				Expect(objectContentType).To(Equal(""))
 			})
 
@@ -198,12 +199,13 @@ var _ = Describe("Out Command", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
-					bucketName, objectPath, objectContentType, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
+					bucketName, objectPath, objectContentType, localPath, predefinedACL, cacheControl := gcsClient.UploadFileArgsForCall(0)
 
 					Expect(bucketName).To(Equal("bucket-name"))
 					Expect(objectPath).To(Equal("folder/file.tgz"))
 					Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
 					Expect(predefinedACL).To(Equal("publicRead"))
+					Expect(cacheControl).To(BeEmpty())
 					Expect(objectContentType).To(Equal(""))
 				})
 			})
@@ -220,12 +222,13 @@ var _ = Describe("Out Command", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
-				bucketName, objectPath, objectContentType, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
+				bucketName, objectPath, objectContentType, localPath, predefinedACL, cacheControl := gcsClient.UploadFileArgsForCall(0)
 
 				Expect(bucketName).To(Equal("bucket-name"))
 				Expect(objectPath).To(Equal("folder/version"))
 				Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
 				Expect(predefinedACL).To(BeEmpty())
+				Expect(cacheControl).To(BeEmpty())
 				Expect(objectContentType).To(Equal(""))
 			})
 
@@ -277,12 +280,13 @@ var _ = Describe("Out Command", func() {
 					Expect(err).ToNot(HaveOccurred())
 
 					Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
-					bucketName, objectPath, objectContentType, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
+					bucketName, objectPath, objectContentType, localPath, predefinedACL, cacheControl := gcsClient.UploadFileArgsForCall(0)
 
 					Expect(bucketName).To(Equal("bucket-name"))
 					Expect(objectPath).To(Equal("folder/version"))
 					Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
 					Expect(predefinedACL).To(Equal("publicRead"))
+					Expect(cacheControl).To(BeEmpty())
 					Expect(objectContentType).To(Equal(""))
 				})
 			})
@@ -300,13 +304,37 @@ var _ = Describe("Out Command", func() {
 				Expect(err).ToNot(HaveOccurred())
 
 				Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
-				bucketName, objectPath, objectContentType, localPath, predefinedACL := gcsClient.UploadFileArgsForCall(0)
+				bucketName, objectPath, objectContentType, localPath, predefinedACL, cacheControl := gcsClient.UploadFileArgsForCall(0)
 
 				Expect(bucketName).To(Equal("bucket-name"))
 				Expect(objectPath).To(Equal("folder/version"))
 				Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
 				Expect(predefinedACL).To(BeEmpty())
+				Expect(cacheControl).To(BeEmpty())
 				Expect(objectContentType).To(Equal("application/octet-stream"))
+			})
+		})
+
+		Describe("with cache_control", func() {
+			BeforeEach(func() {
+				request.Params.CacheControl = "private"
+				request.Source.VersionedFile = "folder/version"
+				createFile("files/file.tgz")
+			})
+
+			It("uploads the file with content type application/octet-stream", func() {
+				_, err := command.Run(sourceDir, request)
+				Expect(err).ToNot(HaveOccurred())
+
+				Expect(gcsClient.UploadFileCallCount()).To(Equal(1))
+				bucketName, objectPath, objectContentType, localPath, predefinedACL, cacheControl := gcsClient.UploadFileArgsForCall(0)
+
+				Expect(bucketName).To(Equal("bucket-name"))
+				Expect(objectPath).To(Equal("folder/version"))
+				Expect(localPath).To(Equal(filepath.Join(sourceDir, "files/file.tgz")))
+				Expect(predefinedACL).To(BeEmpty())
+				Expect(cacheControl).To(Equal("private"))
+				Expect(objectContentType).To(BeEmpty())
 			})
 		})
 	})

@@ -13,6 +13,7 @@ type Params struct {
 	File          string `json:"file"`
 	PredefinedACL string `json:"predefined_acl"`
 	ContentType   string `json:"content_type"`
+	CacheControl  string `json:"cache_control"`
 }
 
 func (params Params) IsValid() (bool, string) {
