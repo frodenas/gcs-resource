@@ -19,7 +19,7 @@ type GCSClient interface {
 	BucketObjects(bucketName string, prefix string) ([]string, error)
 	ObjectGenerations(bucketName string, objectPath string) ([]int64, error)
 	DownloadFile(bucketName string, objectPath string, generation int64, localPath string) error
-	UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string) (int64, error)
+	UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, cacheControl string) (int64, error)
 	URL(bucketName string, objectPath string, generation int64) (string, error)
 	DeleteObject(bucketName string, objectPath string, generation int64) error
 	GetBucketObjectInfo(bucketName, objectPath string) (*storage.Object, error)
@@ -135,7 +135,7 @@ func (gcsclient *gcsclient) DownloadFile(bucketName string, objectPath string, g
 	return nil
 }
 
-func (gcsclient *gcsclient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string) (int64, error) {
+func (gcsclient *gcsclient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, cacheControl string) (int64, error) {
 	isBucketVersioned, err := gcsclient.getBucketVersioning(bucketName)
 	if err != nil {
 		return 0, err
@@ -157,8 +157,9 @@ func (gcsclient *gcsclient) UploadFile(bucketName string, objectPath string, obj
 	defer progress.Finish()
 
 	object := &storage.Object{
-		Name:        objectPath,
-		ContentType: objectContentType,
+		Name:         objectPath,
+		ContentType:  objectContentType,
+		CacheControl: cacheControl,
 	}
 
 	var mediaOptions []googleapi.MediaOption

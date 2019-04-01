@@ -51,7 +51,7 @@ type FakeGCSClient struct {
 	downloadFileReturnsOnCall map[int]struct {
 		result1 error
 	}
-	UploadFileStub        func(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string) (int64, error)
+	UploadFileStub        func(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, cacheControl string) (int64, error)
 	uploadFileMutex       sync.RWMutex
 	uploadFileArgsForCall []struct {
 		bucketName        string
@@ -59,6 +59,7 @@ type FakeGCSClient struct {
 		objectContentType string
 		localPath         string
 		predefinedACL     string
+		cacheControl      string
 	}
 	uploadFileReturns struct {
 		result1 int64
@@ -269,7 +270,7 @@ func (fake *FakeGCSClient) DownloadFileReturnsOnCall(i int, result1 error) {
 	}{result1}
 }
 
-func (fake *FakeGCSClient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string) (int64, error) {
+func (fake *FakeGCSClient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, cacheControl string) (int64, error) {
 	fake.uploadFileMutex.Lock()
 	ret, specificReturn := fake.uploadFileReturnsOnCall[len(fake.uploadFileArgsForCall)]
 	fake.uploadFileArgsForCall = append(fake.uploadFileArgsForCall, struct {
@@ -278,11 +279,12 @@ func (fake *FakeGCSClient) UploadFile(bucketName string, objectPath string, obje
 		objectContentType string
 		localPath         string
 		predefinedACL     string
-	}{bucketName, objectPath, objectContentType, localPath, predefinedACL})
-	fake.recordInvocation("UploadFile", []interface{}{bucketName, objectPath, objectContentType, localPath, predefinedACL})
+		cacheControl      string
+	}{bucketName, objectPath, objectContentType, localPath, predefinedACL, cacheControl})
+	fake.recordInvocation("UploadFile", []interface{}{bucketName, objectPath, objectContentType, localPath, predefinedACL, cacheControl})
 	fake.uploadFileMutex.Unlock()
 	if fake.UploadFileStub != nil {
-		return fake.UploadFileStub(bucketName, objectPath, objectContentType, localPath, predefinedACL)
+		return fake.UploadFileStub(bucketName, objectPath, objectContentType, localPath, predefinedACL, cacheControl)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
@@ -296,10 +298,10 @@ func (fake *FakeGCSClient) UploadFileCallCount() int {
 	return len(fake.uploadFileArgsForCall)
 }
 
-func (fake *FakeGCSClient) UploadFileArgsForCall(i int) (string, string, string, string, string) {
+func (fake *FakeGCSClient) UploadFileArgsForCall(i int) (string, string, string, string, string, string) {
 	fake.uploadFileMutex.RLock()
 	defer fake.uploadFileMutex.RUnlock()
-	return fake.uploadFileArgsForCall[i].bucketName, fake.uploadFileArgsForCall[i].objectPath, fake.uploadFileArgsForCall[i].objectContentType, fake.uploadFileArgsForCall[i].localPath, fake.uploadFileArgsForCall[i].predefinedACL
+	return fake.uploadFileArgsForCall[i].bucketName, fake.uploadFileArgsForCall[i].objectPath, fake.uploadFileArgsForCall[i].objectContentType, fake.uploadFileArgsForCall[i].localPath, fake.uploadFileArgsForCall[i].predefinedACL, fake.uploadFileArgsForCall[i].cacheControl
 }
 
 func (fake *FakeGCSClient) UploadFileReturns(result1 int64, result2 error) {
