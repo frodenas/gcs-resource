@@ -73,7 +73,9 @@ a new version of that file.
   - `publicRead`: Object owner gets OWNER access, and allUsers get READER access.
   - `publicReadWrite`: Object owner gets OWNER access, and allUsers get READER and WRITER access.
 
-* `content_type` (*optional*): Set the MIME type for the object to be uploaded, eg. `application/octet-stream`.
+* `content_type` (*optional*): sets the MIME type for the object to be uploaded, eg. `application/octet-stream`.
+
+* `cache_control` (*optional*): sets the Cache-Control directive for the object to be uploaded.
 
 ## Example Configuration
 
@@ -111,6 +113,7 @@ resources:
     file: path/to/release-*.tgz
     predefined_acl: publicRead
     content_type: application/octet-stream
+    cache_control: max-age=3600
 ```
 
 ## Development
