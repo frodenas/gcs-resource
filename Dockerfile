@@ -1,4 +1,6 @@
-FROM alpine:edge
-RUN apk add --no-cache bash tzdata ca-certificates unzip zip gzip tar
+FROM concourse/busyboxplus:git
+
+# satisfy go crypto/x509
+RUN cat /etc/ssl/certs/*.pem > /etc/ssl/certs/ca-certificates.crt
 
 ADD assets/ /opt/resource/
