@@ -50,6 +50,10 @@ Places the following files in the destination:
 
 #### Parameters
 
+* `skip_download`: *Optional.* If true, skip downloading object from GCS.
+
+  This is useful to trigger a job that does not utilize the file, or to skip the implicit `get` after uploading a file to GCS using `put` (using `get_params`).
+
 * `unpack`: *Optional.* If true and the file is an archive (tar, gzipped tar, other gzipped file, or zip), unpack the file. Gzipped tarballs will be both ungzipped and untarred.
 
 ### `out`: Upload an object to the bucket.

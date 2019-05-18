@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/frodenas/gcs-resource"
+	gcsresource "github.com/frodenas/gcs-resource"
 	"github.com/frodenas/gcs-resource/fakes"
 
 	. "github.com/frodenas/gcs-resource/in"
@@ -317,6 +317,19 @@ var _ = Describe("In Command", func() {
 					Expect(err.Error()).To(ContainSubstring("error url"))
 				})
 
+				Describe("when 'skip_download' is specified", func() {
+					BeforeEach(func() {
+						request.Params.SkipDownload = true
+					})
+
+					It("skips the download of the file", func() {
+						_, err := command.Run(destDir, request)
+						Expect(err).ToNot(HaveOccurred())
+
+						Expect(gcsClient.DownloadFileCallCount()).To(Equal(0))
+					})
+				})
+
 				Describe("when 'unpack' is specified", func() {
 					BeforeEach(func() {
 						request.Params.Unpack = true
@@ -499,6 +512,19 @@ var _ = Describe("In Command", func() {
 				_, err := command.Run(destDir, request)
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("error url"))
+			})
+
+			Describe("when 'skip_download' is specified", func() {
+				BeforeEach(func() {
+					request.Params.SkipDownload = true
+				})
+
+				It("skips the download of the file", func() {
+					_, err := command.Run(destDir, request)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(gcsClient.DownloadFileCallCount()).To(Equal(0))
+				})
 			})
 
 			Describe("when 'unpack' is specified", func() {

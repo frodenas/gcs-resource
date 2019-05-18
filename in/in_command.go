@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/frodenas/gcs-resource"
+	gcsresource "github.com/frodenas/gcs-resource"
 	"github.com/frodenas/gcs-resource/versions"
 )
 
@@ -51,15 +51,17 @@ func (command *InCommand) inByRegex(destinationDir string, request InRequest) (I
 		return InResponse{}, err
 	}
 
-	localPath := filepath.Join(destinationDir, filepath.Base(objectPath))
+	if !request.Params.SkipDownload {
+		localPath := filepath.Join(destinationDir, filepath.Base(objectPath))
 
-	if err := command.downloadFile(bucketName, objectPath, 0, localPath); err != nil {
-		return InResponse{}, err
-	}
-
-	if request.Params.Unpack {
-		if err := command.unpackFile(localPath); err != nil {
+		if err := command.downloadFile(bucketName, objectPath, 0, localPath); err != nil {
 			return InResponse{}, err
+		}
+
+		if request.Params.Unpack {
+			if err := command.unpackFile(localPath); err != nil {
+				return InResponse{}, err
+			}
 		}
 	}
 
@@ -111,15 +113,17 @@ func (command *InCommand) inByVersionedFile(destinationDir string, request InReq
 		return InResponse{}, err
 	}
 
-	localPath := filepath.Join(destinationDir, filepath.Base(objectPath))
+	if !request.Params.SkipDownload {
+		localPath := filepath.Join(destinationDir, filepath.Base(objectPath))
 
-	if err := command.downloadFile(bucketName, objectPath, generation, localPath); err != nil {
-		return InResponse{}, err
-	}
-
-	if request.Params.Unpack {
-		if err := command.unpackFile(localPath); err != nil {
+		if err := command.downloadFile(bucketName, objectPath, generation, localPath); err != nil {
 			return InResponse{}, err
+		}
+
+		if request.Params.Unpack {
+			if err := command.unpackFile(localPath); err != nil {
+				return InResponse{}, err
+			}
 		}
 	}
 
