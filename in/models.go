@@ -11,8 +11,8 @@ type InRequest struct {
 }
 
 type Params struct {
-	SkipDownload bool `json:"skip_download"`
-	Unpack       bool `json:"unpack"`
+	SkipDownload string `json:"skip_download"`
+	Unpack       bool   `json:"unpack"`
 }
 
 type InResponse struct {

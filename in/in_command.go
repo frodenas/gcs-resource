@@ -32,10 +32,21 @@ func (command *InCommand) Run(destinationDir string, request InRequest) (InRespo
 		return InResponse{}, err
 	}
 
-	if request.Source.Regexp != "" {
-		return command.inByRegex(destinationDir, request)
+	var skipDownload bool
+
+	if request.Params.SkipDownload != "" {
+		skipDownload, err = strconv.ParseBool(request.Params.SkipDownload)
+		if err != nil {
+			return InResponse{}, fmt.Errorf("invalid skip_download value specified: %s", request.Params.SkipDownload)
+		}
 	} else {
-		return command.inByVersionedFile(destinationDir, request)
+		skipDownload = request.Source.SkipDownload
+	}
+
+	if request.Source.Regexp != "" {
+		return command.inByRegex(destinationDir, request, skipDownload)
+	} else {
+		return command.inByVersionedFile(destinationDir, request, skipDownload)
 	}
 }
 
@@ -43,7 +54,7 @@ func (command *InCommand) createDirectory(destinationDir string) error {
 	return os.MkdirAll(destinationDir, 0755)
 }
 
-func (command *InCommand) inByRegex(destinationDir string, request InRequest) (InResponse, error) {
+func (command *InCommand) inByRegex(destinationDir string, request InRequest, skipDownload bool) (InResponse, error) {
 	bucketName := request.Source.Bucket
 
 	objectPath, err := command.pathToDownload(request)
@@ -51,7 +62,7 @@ func (command *InCommand) inByRegex(destinationDir string, request InRequest) (I
 		return InResponse{}, err
 	}
 
-	if !request.Params.SkipDownload {
+	if !skipDownload {
 		localPath := filepath.Join(destinationDir, filepath.Base(objectPath))
 
 		if err := command.downloadFile(bucketName, objectPath, 0, localPath); err != nil {
@@ -105,7 +116,7 @@ func (command *InCommand) pathToDownload(request InRequest) (string, error) {
 	return lastExtraction.Path, nil
 }
 
-func (command *InCommand) inByVersionedFile(destinationDir string, request InRequest) (InResponse, error) {
+func (command *InCommand) inByVersionedFile(destinationDir string, request InRequest, skipDownload bool) (InResponse, error) {
 	bucketName := request.Source.Bucket
 	objectPath := request.Source.VersionedFile
 	generation, err := request.Version.GenerationValue()
@@ -113,7 +124,7 @@ func (command *InCommand) inByVersionedFile(destinationDir string, request InReq
 		return InResponse{}, err
 	}
 
-	if !request.Params.SkipDownload {
+	if !skipDownload {
 		localPath := filepath.Join(destinationDir, filepath.Base(objectPath))
 
 		if err := command.downloadFile(bucketName, objectPath, generation, localPath); err != nil {

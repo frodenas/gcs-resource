@@ -7,6 +7,7 @@ type Source struct {
 	Bucket        string `json:"bucket"`
 	Regexp        string `json:"regexp"`
 	VersionedFile string `json:"versioned_file"`
+	SkipDownload  bool   `json:"skip_download"`
 }
 
 func (source Source) IsValid() (bool, string) {
