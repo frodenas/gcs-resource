@@ -9,7 +9,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 
-	"github.com/frodenas/gcs-resource"
+	gcsresource "github.com/frodenas/gcs-resource"
 	"github.com/frodenas/gcs-resource/fakes"
 
 	. "github.com/frodenas/gcs-resource/in"
@@ -317,6 +317,52 @@ var _ = Describe("In Command", func() {
 					Expect(err.Error()).To(ContainSubstring("error url"))
 				})
 
+				Describe("when 'skip_download' is specified globally", func() {
+					BeforeEach(func() {
+						request.Source.SkipDownload = true
+					})
+
+					It("skips the download of the file", func() {
+						_, err := command.Run(destDir, request)
+						Expect(err).ToNot(HaveOccurred())
+
+						Expect(gcsClient.DownloadFileCallCount()).To(Equal(0))
+					})
+				})
+
+				Describe("when 'skip_download' is specified locally", func() {
+					BeforeEach(func() {
+						request.Params.SkipDownload = "true"
+					})
+
+					It("skips the download of the file", func() {
+						_, err := command.Run(destDir, request)
+						Expect(err).ToNot(HaveOccurred())
+
+						Expect(gcsClient.DownloadFileCallCount()).To(Equal(0))
+					})
+				})
+
+				Describe("when 'skip_download' is specified globally, but overridden locally", func() {
+					BeforeEach(func() {
+						request.Source.SkipDownload = true
+						request.Params.SkipDownload = "false"
+					})
+
+					It("downloads the existing version of the file", func() {
+						_, err := command.Run(destDir, request)
+						Expect(err).ToNot(HaveOccurred())
+
+						Expect(gcsClient.DownloadFileCallCount()).To(Equal(1))
+						bucketName, objectPath, generation, localPath := gcsClient.DownloadFileArgsForCall(0)
+
+						Expect(bucketName).To(Equal("bucket-name"))
+						Expect(objectPath).To(Equal("folder/file-1.3.tgz"))
+						Expect(generation).To(Equal(int64(0)))
+						Expect(localPath).To(Equal(filepath.Join(destDir, "file-1.3.tgz")))
+					})
+				})
+
 				Describe("when 'unpack' is specified", func() {
 					BeforeEach(func() {
 						request.Params.Unpack = true
@@ -499,6 +545,64 @@ var _ = Describe("In Command", func() {
 				_, err := command.Run(destDir, request)
 				Expect(err).To(HaveOccurred())
 				Expect(err.Error()).To(ContainSubstring("error url"))
+			})
+
+			Describe("when 'skip_download' is specified globally", func() {
+				BeforeEach(func() {
+					request.Source.SkipDownload = true
+				})
+
+				It("skips the download of the file", func() {
+					_, err := command.Run(destDir, request)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(gcsClient.DownloadFileCallCount()).To(Equal(0))
+				})
+			})
+
+			Describe("when 'skip_download' is specified locally", func() {
+				BeforeEach(func() {
+					request.Params.SkipDownload = "true"
+				})
+
+				It("skips the download of the file", func() {
+					_, err := command.Run(destDir, request)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(gcsClient.DownloadFileCallCount()).To(Equal(0))
+				})
+			})
+
+			Describe("when 'skip_download' is specified globally, but overridden locally", func() {
+				BeforeEach(func() {
+					request.Source.SkipDownload = true
+					request.Params.SkipDownload = "false"
+				})
+
+				It("downloads the versioned file", func() {
+					_, err := command.Run(destDir, request)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(gcsClient.DownloadFileCallCount()).To(Equal(1))
+					bucketName, objectPath, generation, localPath := gcsClient.DownloadFileArgsForCall(0)
+
+					Expect(bucketName).To(Equal("bucket-name"))
+					Expect(objectPath).To(Equal("folder/version"))
+					Expect(generation).To(Equal(int64(12345)))
+					Expect(localPath).To(Equal(filepath.Join(destDir, "version")))
+				})
+			})
+
+			Describe("when an invalid 'skip_download' is specified locally", func() {
+				BeforeEach(func() {
+					request.Params.SkipDownload = "foo"
+				})
+
+				It("returns an error to the user", func() {
+					_, err := command.Run(destDir, request)
+					Expect(err).To(HaveOccurred())
+					Expect(err.Error()).To(ContainSubstring("invalid skip_download value specified"))
+				})
 			})
 
 			Describe("when 'unpack' is specified", func() {

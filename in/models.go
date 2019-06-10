@@ -1,7 +1,7 @@
 package in
 
 import (
-	"github.com/frodenas/gcs-resource"
+	gcsresource "github.com/frodenas/gcs-resource"
 )
 
 type InRequest struct {
@@ -11,7 +11,8 @@ type InRequest struct {
 }
 
 type Params struct {
-	Unpack bool `json:"unpack"`
+	SkipDownload string `json:"skip_download"`
+	Unpack       bool   `json:"unpack"`
 }
 
 type InResponse struct {

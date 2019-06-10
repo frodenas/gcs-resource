@@ -16,9 +16,9 @@ import (
 	"github.com/onsi/gomega/gbytes"
 	"github.com/onsi/gomega/gexec"
 
-	"github.com/frodenas/gcs-resource"
+	gcsresource "github.com/frodenas/gcs-resource"
 	"github.com/frodenas/gcs-resource/in"
-	"github.com/nu7hatch/gouuid"
+	uuid "github.com/nu7hatch/gouuid"
 )
 
 var _ = Describe("in", func() {
@@ -200,6 +200,82 @@ var _ = Describe("in", func() {
 					versionContents, err := ioutil.ReadFile(filepath.Join(destDir, "version"))
 					Expect(err).ToNot(HaveOccurred())
 					Expect(versionContents).To(Equal([]byte("1")))
+
+					Expect(filepath.Join(destDir, "url")).To(BeARegularFile())
+					urlContents, err := ioutil.ReadFile(filepath.Join(destDir, "url"))
+					Expect(err).ToNot(HaveOccurred())
+					Expect(urlContents).To(Equal([]byte(url)))
+				})
+			})
+
+			Context("when path exists and 'skip_download' is specified as a source param", func() {
+				BeforeEach(func() {
+					tempDir, err := ioutil.TempDir("", directoryPrefix)
+					Expect(err).ToNot(HaveOccurred())
+
+					tempFilePath := filepath.Join(tempDir, "file-to-download.txt")
+					tempTarballPath := filepath.Join(tempDir, "file-to-download.tgz")
+
+					err = ioutil.WriteFile(tempFilePath, []byte("file-to-download-4"), 0600)
+					Expect(err).ToNot(HaveOccurred())
+
+					command := exec.Command("tar", "czf", tempTarballPath, "-C", tempDir, "file-to-download.txt")
+					session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(session).Should(gexec.Exit(0))
+
+					_, err = gcsClient.UploadFile(bucketName, filepath.Join(directoryPrefix, "file-to-download.tgz"), "", tempTarballPath, "", "")
+					Expect(err).ToNot(HaveOccurred())
+
+					err = os.RemoveAll(tempDir)
+					Expect(err).NotTo(HaveOccurred())
+
+					inRequest = in.InRequest{
+						Source: gcsresource.Source{
+							JSONKey:      jsonKey,
+							Bucket:       bucketName,
+							Regexp:       filepath.Join(directoryPrefix, "file-to-download-(.*)"),
+							SkipDownload: true,
+						},
+						Version: gcsresource.Version{
+							Path: filepath.Join(directoryPrefix, "file-to-download.tgz"),
+						},
+					}
+
+					err = json.NewEncoder(stdin).Encode(inRequest)
+					Expect(err).ToNot(HaveOccurred())
+				})
+
+				AfterEach(func() {
+					err = gcsClient.DeleteObject(bucketName, filepath.Join(directoryPrefix, "file-to-download.tgz"), 0)
+					Expect(err).ToNot(HaveOccurred())
+				})
+
+				It("skips the download of the file, but still outputs the response", func() {
+					reader := bytes.NewBuffer(session.Out.Contents())
+					err = json.NewDecoder(reader).Decode(&inResponse)
+					Expect(err).ToNot(HaveOccurred())
+
+					url, err := gcsClient.URL(bucketName, filepath.Join(directoryPrefix, "file-to-download.tgz"), int64(0))
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(inResponse).To(Equal(in.InResponse{
+						Version: gcsresource.Version{
+							Path: filepath.Join(directoryPrefix, "file-to-download.tgz"),
+						},
+						Metadata: []gcsresource.MetadataPair{
+							{
+								Name:  "filename",
+								Value: "file-to-download.tgz",
+							},
+							{
+								Name:  "url",
+								Value: url,
+							},
+						},
+					}))
+
+					Expect(filepath.Join(destDir, "file-to-download.tgz")).NotTo(BeARegularFile())
 
 					Expect(filepath.Join(destDir, "url")).To(BeARegularFile())
 					urlContents, err := ioutil.ReadFile(filepath.Join(destDir, "url"))
@@ -495,6 +571,93 @@ var _ = Describe("in", func() {
 					versionContents, err := ioutil.ReadFile(filepath.Join(destDir, "generation"))
 					Expect(err).ToNot(HaveOccurred())
 					Expect(versionContents).To(Equal([]byte(strconv.FormatInt(generation2, 10))))
+
+					Expect(filepath.Join(destDir, "url")).To(BeARegularFile())
+					urlContents, err := ioutil.ReadFile(filepath.Join(destDir, "url"))
+					Expect(err).ToNot(HaveOccurred())
+					Expect(urlContents).To(Equal([]byte(url)))
+				})
+			})
+
+			Context("when the versioned file exists and 'skip_download' is specified as a get param", func() {
+				var (
+					generation int64
+				)
+
+				BeforeEach(func() {
+					tempDir, err := ioutil.TempDir("", directoryPrefix)
+					Expect(err).ToNot(HaveOccurred())
+
+					tempFilePath := filepath.Join(tempDir, "version.txt")
+					tempTarballPath := filepath.Join(tempDir, "version.tgz")
+
+					err = ioutil.WriteFile(tempFilePath, []byte("generation-4"), 0600)
+					Expect(err).ToNot(HaveOccurred())
+
+					command := exec.Command("tar", "czf", tempTarballPath, "-C", tempDir, "version.txt")
+					session, err := gexec.Start(command, GinkgoWriter, GinkgoWriter)
+					Expect(err).NotTo(HaveOccurred())
+					Eventually(session).Should(gexec.Exit(0))
+
+					generation, err = gcsClient.UploadFile(versionedBucketName, filepath.Join(directoryPrefix, "version.tgz"), "", tempTarballPath, "", "")
+					Expect(err).ToNot(HaveOccurred())
+
+					err = os.RemoveAll(tempDir)
+					Expect(err).NotTo(HaveOccurred())
+
+					inRequest = in.InRequest{
+						Source: gcsresource.Source{
+							JSONKey:       jsonKey,
+							Bucket:        versionedBucketName,
+							VersionedFile: filepath.Join(directoryPrefix, "version.tgz"),
+						},
+						Version: gcsresource.Version{
+							Generation: fmt.Sprintf("%d", generation),
+						},
+						Params: in.Params{
+							SkipDownload: "true",
+						},
+					}
+
+					err = json.NewEncoder(stdin).Encode(inRequest)
+					Expect(err).ToNot(HaveOccurred())
+				})
+
+				AfterEach(func() {
+					err := gcsClient.DeleteObject(versionedBucketName, filepath.Join(directoryPrefix, "version.tgz"), generation)
+					Expect(err).ToNot(HaveOccurred())
+				})
+
+				It("skips the download of the file, but still outputs the response", func() {
+					reader := bytes.NewBuffer(session.Out.Contents())
+					err = json.NewDecoder(reader).Decode(&inResponse)
+					Expect(err).ToNot(HaveOccurred())
+
+					url, err := gcsClient.URL(versionedBucketName, filepath.Join(directoryPrefix, "version.tgz"), generation)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(inResponse).To(Equal(in.InResponse{
+						Version: gcsresource.Version{
+							Generation: fmt.Sprintf("%d", generation),
+						},
+						Metadata: []gcsresource.MetadataPair{
+							{
+								Name:  "filename",
+								Value: "version.tgz",
+							},
+							{
+								Name:  "url",
+								Value: url,
+							},
+						},
+					}))
+
+					Expect(filepath.Join(destDir, "version.txt")).NotTo(BeARegularFile())
+
+					Expect(filepath.Join(destDir, "generation")).To(BeARegularFile())
+					versionContents, err := ioutil.ReadFile(filepath.Join(destDir, "generation"))
+					Expect(err).ToNot(HaveOccurred())
+					Expect(versionContents).To(Equal([]byte(strconv.FormatInt(generation, 10))))
 
 					Expect(filepath.Join(destDir, "url")).To(BeARegularFile())
 					urlContents, err := ioutil.ReadFile(filepath.Join(destDir, "url"))
