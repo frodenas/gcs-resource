@@ -3,7 +3,6 @@ package check
 import (
 	"errors"
 	"fmt"
-
 	"github.com/frodenas/gcs-resource"
 	"github.com/frodenas/gcs-resource/versions"
 )
@@ -33,6 +32,13 @@ func (command *CheckCommand) Run(request CheckRequest) (CheckResponse, error) {
 func (command *CheckCommand) checkByRegex(request CheckRequest) CheckResponse {
 	extractions := versions.GetBucketObjectVersions(command.gcsClient, request.Source)
 
+	if request.Source.InitialPath != "" {
+		extraction, ok := versions.Extract(request.Source.InitialPath, request.Source.Regexp)
+		if ok {
+			extractions = append([]versions.Extraction{extraction}, extractions...)
+		}
+	}
+
 	if len(extractions) == 0 {
 		return CheckResponse{}
 	}
@@ -51,6 +57,10 @@ func (command *CheckCommand) checkByVersionedFile(request CheckRequest) (CheckRe
 	generations, err := command.gcsClient.ObjectGenerations(request.Source.Bucket, request.Source.VersionedFile)
 	if err != nil {
 		return response, err
+	}
+
+	if request.Source.InitialVersion != "" {
+		generations = append(generations, request.Source.InitialVersionNumber)
 	}
 
 	if len(generations) == 0 {

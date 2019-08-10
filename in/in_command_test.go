@@ -452,6 +452,59 @@ var _ = Describe("In Command", func() {
 					})
 				})
 			})
+
+			Context("when initial path was set", func() {
+				JustBeforeEach(func() {
+					request.Version.Path = "folder/file-0.0.0.tgz"
+					request.Source.InitialPath = "folder/file-0.0.0.tgz"
+				})
+
+				It("creates a version file that matches initial path", func() {
+					versionFile := filepath.Join(destDir, "version")
+					Expect(versionFile).ToNot(BeAnExistingFile())
+
+					_, err := command.Run(destDir, request)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(versionFile).To(BeAnExistingFile())
+					contents, err := ioutil.ReadFile(versionFile)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(string(contents)).To(Equal("0.0.0"))
+				})
+
+				It("creates an empty file", func() {
+					versionFile := filepath.Join(destDir, "file-0.0.0.tgz")
+					Expect(versionFile).ToNot(BeAnExistingFile())
+
+					_, err := command.Run(destDir, request)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(versionFile).To(BeAnExistingFile())
+					contents, err := ioutil.ReadFile(versionFile)
+					Expect(err).ToNot(HaveOccurred())
+					Expect(string(contents)).To(Equal(""))
+				})
+
+				Context("when initial content is specified", func() {
+					JustBeforeEach(func() {
+						request.Source.InitialContentText = "foo"
+					})
+
+					It("creates the file with initial content", func() {
+						versionFile := filepath.Join(destDir, "file-0.0.0.tgz")
+						Expect(versionFile).ToNot(BeAnExistingFile())
+
+						_, err := command.Run(destDir, request)
+						Expect(err).ToNot(HaveOccurred())
+
+						Expect(versionFile).To(BeAnExistingFile())
+						contents, err := ioutil.ReadFile(versionFile)
+						Expect(err).ToNot(HaveOccurred())
+						Expect(string(contents)).To(Equal("foo"))
+
+					})
+				})
+			})
 		})
 
 		Describe("with versioned_file", func() {
