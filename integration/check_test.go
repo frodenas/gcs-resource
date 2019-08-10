@@ -349,7 +349,7 @@ var _ = Describe("check", func() {
 			})
 		})
 
-		Context("when the bucket does not exits", func() {
+		Context("when the bucket does not exist", func() {
 			BeforeEach(func() {
 				checkRequest = check.CheckRequest{
 					Source: gcsresource.Source{
