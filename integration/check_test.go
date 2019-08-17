@@ -134,17 +134,43 @@ var _ = Describe("check", func() {
 						Regexp:  filepath.Join(directoryPrefix, "missing-(.*).tgz"),
 					},
 				}
-
-				err = json.NewEncoder(stdin).Encode(checkRequest)
-				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("returns an empty check response", func() {
-				reader := bytes.NewBuffer(session.Out.Contents())
-				err = json.NewDecoder(reader).Decode(&checkResponse)
-				Expect(err).ToNot(HaveOccurred())
+			Context("when no initial_path is set", func() {
+				BeforeEach(func() {
+					err = json.NewEncoder(stdin).Encode(checkRequest)
+					Expect(err).ToNot(HaveOccurred())
+				})
 
-				Expect(checkResponse).To(Equal(check.CheckResponse{}))
+				It("returns an empty check response", func() {
+					reader := bytes.NewBuffer(session.Out.Contents())
+					err = json.NewDecoder(reader).Decode(&checkResponse)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(checkResponse).To(Equal(check.CheckResponse{}))
+				})
+			})
+
+			Context("when initial_path is set", func() {
+				BeforeEach(func() {
+					checkRequest.Source.InitialPath = filepath.Join(directoryPrefix, "missing-0.0.0.tgz")
+					err = json.NewEncoder(stdin).Encode(checkRequest)
+					Expect(err).ToNot(HaveOccurred())
+				})
+
+				It("returns the specified initial path", func() {
+					reader := bytes.NewBuffer(session.Out.Contents())
+					err = json.NewDecoder(reader).Decode(&checkResponse)
+					Expect(err).ToNot(HaveOccurred())
+
+					expected := check.CheckResponse{
+						{
+							Path: filepath.Join(directoryPrefix, "missing-0.0.0.tgz"),
+						},
+					}
+
+					Expect(checkResponse).To(Equal(expected))
+				})
 			})
 		})
 
@@ -349,7 +375,7 @@ var _ = Describe("check", func() {
 			})
 		})
 
-		Context("when the bucket does not exits", func() {
+		Context("when the bucket does not exist", func() {
 			BeforeEach(func() {
 				checkRequest = check.CheckRequest{
 					Source: gcsresource.Source{
@@ -379,17 +405,43 @@ var _ = Describe("check", func() {
 						VersionedFile: filepath.Join(directoryPrefix, "version"),
 					},
 				}
-
-				err = json.NewEncoder(stdin).Encode(checkRequest)
-				Expect(err).ToNot(HaveOccurred())
 			})
 
-			It("returns an empty check response", func() {
-				reader := bytes.NewBuffer(session.Out.Contents())
-				err = json.NewDecoder(reader).Decode(&checkResponse)
-				Expect(err).ToNot(HaveOccurred())
+			Context("and no initial_version is set", func() {
+				BeforeEach(func() {
+					err = json.NewEncoder(stdin).Encode(checkRequest)
+					Expect(err).ToNot(HaveOccurred())
+				})
 
-				Expect(checkResponse).To(Equal(check.CheckResponse{}))
+				It("returns an empty check response", func() {
+					reader := bytes.NewBuffer(session.Out.Contents())
+					err = json.NewDecoder(reader).Decode(&checkResponse)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(checkResponse).To(Equal(check.CheckResponse{}))
+				})
+			})
+
+			Context("when initial_version is set", func() {
+				BeforeEach(func() {
+					checkRequest.Source.InitialVersion = "100"
+					err = json.NewEncoder(stdin).Encode(checkRequest)
+					Expect(err).ToNot(HaveOccurred())
+				})
+
+				It("returns the specified initial version", func() {
+					reader := bytes.NewBuffer(session.Out.Contents())
+					err = json.NewDecoder(reader).Decode(&checkResponse)
+					Expect(err).ToNot(HaveOccurred())
+
+					expected := check.CheckResponse{
+						{
+							Generation: fmt.Sprintf("%d", 100),
+						},
+					}
+
+					Expect(checkResponse).To(Equal(expected))
+				})
 			})
 		})
 
@@ -434,9 +486,10 @@ var _ = Describe("check", func() {
 				BeforeEach(func() {
 					checkRequest = check.CheckRequest{
 						Source: gcsresource.Source{
-							JSONKey:       jsonKey,
-							Bucket:        versionedBucketName,
-							VersionedFile: filepath.Join(directoryPrefix, "version"),
+							JSONKey:        jsonKey,
+							Bucket:         versionedBucketName,
+							VersionedFile:  filepath.Join(directoryPrefix, "version"),
+							InitialVersion: "100",
 						},
 					}
 

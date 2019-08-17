@@ -147,6 +147,24 @@ var _ = Describe("Check Command", func() {
 
 					Expect(response).To(HaveLen(0))
 				})
+
+				Context("and initial_path was set", func() {
+					BeforeEach(func() {
+						request.Source.InitialPath = "folder/file-0.0.0.tgz"
+					})
+
+					It("does the emits the initial version", func() {
+						response, err := command.Run(request)
+						Expect(err).ToNot(HaveOccurred())
+
+						Expect(response).To(HaveLen(1))
+						Expect(response).To(ConsistOf(
+							gcsresource.Version{
+								Path: "folder/file-0.0.0.tgz",
+							},
+						))
+					})
+				})
 			})
 
 			Context("when the regexp does not match anything", func() {
@@ -260,6 +278,27 @@ var _ = Describe("Check Command", func() {
 					_, err := command.Run(request)
 					Expect(err).To(HaveOccurred())
 					Expect(err.Error()).To(ContainSubstring("error object generations"))
+				})
+			})
+
+			Context("when the file does not exist", func() {
+				Context("and initial_version is set", func() {
+					BeforeEach(func() {
+						request.Source.InitialVersion = "1234"
+						gcsClient.ObjectGenerationsReturns([]int64{}, nil)
+					})
+
+					It("emits the initial version", func() {
+						response, err := command.Run(request)
+						Expect(err).ToNot(HaveOccurred())
+
+						Expect(response).To(HaveLen(1))
+						Expect(response).To(ConsistOf(
+							gcsresource.Version{
+								Generation: "1234",
+							},
+						))
+					})
 				})
 			})
 		})

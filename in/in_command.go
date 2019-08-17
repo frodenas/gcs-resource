@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 
-	gcsresource "github.com/frodenas/gcs-resource"
+	"github.com/frodenas/gcs-resource"
 	"github.com/frodenas/gcs-resource/versions"
 )
 
@@ -57,22 +58,46 @@ func (command *InCommand) createDirectory(destinationDir string) error {
 func (command *InCommand) inByRegex(destinationDir string, request InRequest, skipDownload bool) (InResponse, error) {
 	bucketName := request.Source.Bucket
 
-	objectPath, err := command.pathToDownload(request)
-	if err != nil {
-		return InResponse{}, err
-	}
+	var url, objectPath string
+	var err error
 
-	if !skipDownload {
-		localPath := filepath.Join(destinationDir, filepath.Base(objectPath))
+	isInitialVersion := request.Source.InitialPath != "" && request.Version.Path == request.Source.InitialPath
+	if isInitialVersion {
+		initialFilename := path.Base(request.Version.Path)
 
-		if err := command.downloadFile(bucketName, objectPath, 0, localPath); err != nil {
+		err = ioutil.WriteFile(filepath.Join(destinationDir, initialFilename), request.Source.GetContents(), 0644)
+		if err != nil {
 			return InResponse{}, err
 		}
 
-		if request.Params.Unpack {
-			if err := command.unpackFile(localPath); err != nil {
+		objectPath = request.Source.InitialPath
+	} else {
+		objectPath, err = command.pathToDownload(request)
+		if err != nil {
+			return InResponse{}, err
+		}
+
+		if !skipDownload {
+			localPath := filepath.Join(destinationDir, filepath.Base(objectPath))
+
+			if err = command.downloadFile(bucketName, objectPath, 0, localPath); err != nil {
 				return InResponse{}, err
 			}
+
+			if request.Params.Unpack {
+				if err := command.unpackFile(localPath); err != nil {
+					return InResponse{}, err
+				}
+			}
+		}
+
+		url, err = command.gcsClient.URL(bucketName, objectPath, 0)
+		if err != nil {
+			return InResponse{}, err
+		}
+
+		if err = command.writeURLFile(url, destinationDir); err != nil {
+			return InResponse{}, err
 		}
 	}
 
@@ -82,15 +107,6 @@ func (command *InCommand) inByRegex(destinationDir string, request InRequest, sk
 		if err != nil {
 			return InResponse{}, err
 		}
-	}
-
-	url, err := command.gcsClient.URL(bucketName, objectPath, 0)
-	if err != nil {
-		return InResponse{}, err
-	}
-
-	if err := command.writeURLFile(url, destinationDir); err != nil {
-		return InResponse{}, err
 	}
 
 	return InResponse{
@@ -117,6 +133,7 @@ func (command *InCommand) pathToDownload(request InRequest) (string, error) {
 }
 
 func (command *InCommand) inByVersionedFile(destinationDir string, request InRequest, skipDownload bool) (InResponse, error) {
+	var url string
 	bucketName := request.Source.Bucket
 	objectPath := request.Source.VersionedFile
 	generation, err := request.Version.GenerationValue()
@@ -124,30 +141,43 @@ func (command *InCommand) inByVersionedFile(destinationDir string, request InReq
 		return InResponse{}, err
 	}
 
-	if !skipDownload {
-		localPath := filepath.Join(destinationDir, filepath.Base(objectPath))
+	isInitialVersion := request.Source.InitialVersion != "" && request.Version.Generation == request.Source.InitialVersion
 
-		if err := command.downloadFile(bucketName, objectPath, generation, localPath); err != nil {
+	if isInitialVersion {
+		initialFilename := path.Base(request.Source.VersionedFile)
+
+		err = ioutil.WriteFile(filepath.Join(destinationDir, initialFilename), request.Source.GetContents(), 0644)
+		if err != nil {
 			return InResponse{}, err
 		}
 
-		if request.Params.Unpack {
-			if err := command.unpackFile(localPath); err != nil {
+		objectPath = request.Source.VersionedFile
+	} else {
+		if !skipDownload {
+			localPath := filepath.Join(destinationDir, filepath.Base(objectPath))
+
+			if err = command.downloadFile(bucketName, objectPath, generation, localPath); err != nil {
 				return InResponse{}, err
 			}
+
+			if request.Params.Unpack {
+				if err = command.unpackFile(localPath); err != nil {
+					return InResponse{}, err
+				}
+			}
+		}
+
+		url, err = command.gcsClient.URL(bucketName, objectPath, generation)
+		if err != nil {
+			return InResponse{}, err
+		}
+
+		if err = command.writeURLFile(url, destinationDir); err != nil {
+			return InResponse{}, err
 		}
 	}
 
 	if err := command.writeGenerationFile(generation, destinationDir); err != nil {
-		return InResponse{}, err
-	}
-
-	url, err := command.gcsClient.URL(bucketName, objectPath, generation)
-	if err != nil {
-		return InResponse{}, err
-	}
-
-	if err := command.writeURLFile(url, destinationDir); err != nil {
 		return InResponse{}, err
 	}
 
@@ -206,14 +236,14 @@ func (command *InCommand) metadata(objectPath string, url string) []gcsresource.
 	objectFilename := filepath.Base(objectPath)
 
 	metadata := []gcsresource.MetadataPair{
-		gcsresource.MetadataPair{
+		{
 			Name:  "filename",
 			Value: objectFilename,
 		},
-		gcsresource.MetadataPair{
-			Name:  "url",
-			Value: url,
-		},
+	}
+
+	if url != "" {
+		metadata = append(metadata, gcsresource.MetadataPair{Name: "url", Value: url})
 	}
 
 	return metadata

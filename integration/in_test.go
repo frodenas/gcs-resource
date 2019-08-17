@@ -208,6 +208,56 @@ var _ = Describe("in", func() {
 				})
 			})
 
+			Context("when the path matches the initial path", func() {
+				BeforeEach(func() {
+					inRequest = in.InRequest{
+						Source: gcsresource.Source{
+							JSONKey:            jsonKey,
+							Bucket:             bucketName,
+							Regexp:             filepath.Join(directoryPrefix, "file-to-download-(.*)"),
+							InitialPath:        filepath.Join(directoryPrefix, "file-to-download-0.0.0"),
+							InitialContentText: "foo",
+						},
+						Version: gcsresource.Version{
+							Path: filepath.Join(directoryPrefix, "file-to-download-0.0.0"),
+						},
+					}
+
+					err = json.NewEncoder(stdin).Encode(inRequest)
+					Expect(err).ToNot(HaveOccurred())
+				})
+
+				It("uses the initial content", func() {
+					reader := bytes.NewBuffer(session.Out.Contents())
+					err = json.NewDecoder(reader).Decode(&inResponse)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(inResponse).To(Equal(in.InResponse{
+						Version: gcsresource.Version{
+							Path: filepath.Join(directoryPrefix, "file-to-download-0.0.0"),
+						},
+						Metadata: []gcsresource.MetadataPair{
+							{
+								Name:  "filename",
+								Value: "file-to-download-0.0.0",
+							},
+						},
+					}))
+
+					Expect(filepath.Join(destDir, "file-to-download-0.0.0")).To(BeARegularFile())
+					contents, err := ioutil.ReadFile(filepath.Join(destDir, "file-to-download-0.0.0"))
+					Expect(err).ToNot(HaveOccurred())
+					Expect(contents).To(Equal([]byte("foo")))
+
+					Expect(filepath.Join(destDir, "version")).To(BeARegularFile())
+					versionContents, err := ioutil.ReadFile(filepath.Join(destDir, "version"))
+					Expect(err).ToNot(HaveOccurred())
+					Expect(versionContents).To(Equal([]byte("0.0.0")))
+
+					Expect(filepath.Join(destDir, "url")).ToNot(BeARegularFile())
+				})
+			})
+
 			Context("when path exists and 'skip_download' is specified as a source param", func() {
 				BeforeEach(func() {
 					tempDir, err := ioutil.TempDir("", directoryPrefix)
@@ -777,6 +827,57 @@ var _ = Describe("in", func() {
 
 				It("returns an error", func() {
 					Expect(session.Err).To(gbytes.Say("error running command: googleapi:"))
+				})
+			})
+
+			Context("when the version matches the initial version", func() {
+				BeforeEach(func() {
+					inRequest = in.InRequest{
+						Source: gcsresource.Source{
+							JSONKey:              jsonKey,
+							Bucket:               versionedBucketName,
+							VersionedFile:        filepath.Join(directoryPrefix, "missing"),
+							InitialVersion:       "0",
+							InitialContentBinary: "Zm9v",
+						},
+						Version: gcsresource.Version{
+							Generation: "0",
+						},
+					}
+
+					err = json.NewEncoder(stdin).Encode(inRequest)
+					Expect(err).ToNot(HaveOccurred())
+				})
+
+				It("uses the writes decoded base64 as initial content", func() {
+					reader := bytes.NewBuffer(session.Out.Contents())
+					err = json.NewDecoder(reader).Decode(&inResponse)
+					Expect(err).ToNot(HaveOccurred())
+
+					Expect(inResponse).To(Equal(in.InResponse{
+						Version: gcsresource.Version{
+							Generation: "0",
+						},
+						Metadata: []gcsresource.MetadataPair{
+							{
+								Name:  "filename",
+								Value: "missing",
+							},
+						},
+					}))
+
+					Expect(filepath.Join(destDir, "missing")).To(BeARegularFile())
+					contents, err := ioutil.ReadFile(filepath.Join(destDir, "missing"))
+					Expect(err).ToNot(HaveOccurred())
+					Expect(contents).To(Equal([]byte("foo")), "")
+
+					Expect(filepath.Join(destDir, "generation")).To(BeARegularFile())
+					versionContents, err := ioutil.ReadFile(filepath.Join(destDir, "generation"))
+					Expect(err).ToNot(HaveOccurred())
+					Expect(versionContents).To(Equal([]byte(strconv.FormatInt(0, 10))))
+
+					Expect(filepath.Join(destDir, "url")).ToNot(BeARegularFile())
+
 				})
 			})
 		})
