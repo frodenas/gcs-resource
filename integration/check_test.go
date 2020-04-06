@@ -104,7 +104,7 @@ var _ = Describe("check", func() {
 			directoryPrefix = "check-request-files-" + guid.String()
 		})
 
-		Context("when the bucket does not exits", func() {
+		Context("when the bucket does not exist", func() {
 			BeforeEach(func() {
 				checkRequest = check.CheckRequest{
 					Source: gcsresource.Source{
@@ -121,7 +121,7 @@ var _ = Describe("check", func() {
 			})
 
 			It("returns an error", func() {
-				Expect(session.Err).To(gbytes.Say("error listing objects: googleapi:"))
+				Expect(session.Err).To(gbytes.Say("error listing objects: storage: bucket doesn't exist"))
 			})
 		})
 
@@ -392,7 +392,7 @@ var _ = Describe("check", func() {
 			})
 
 			It("returns an error", func() {
-				Expect(session.Err).To(gbytes.Say("error running command: googleapi:"))
+				Expect(session.Err).To(gbytes.Say("error running command: storage: bucket doesn't exist"))
 			})
 		})
 

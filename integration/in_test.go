@@ -437,7 +437,7 @@ var _ = Describe("in", func() {
 				})
 
 				It("returns an error", func() {
-					Expect(session.Err).To(gbytes.Say("error running command: googleapi:"))
+					Expect(session.Err).To(gbytes.Say("error running command: storage: object doesn't exist"))
 				})
 			})
 		})
@@ -592,7 +592,6 @@ var _ = Describe("in", func() {
 					reader := bytes.NewBuffer(session.Out.Contents())
 					err = json.NewDecoder(reader).Decode(&inResponse)
 					Expect(err).ToNot(HaveOccurred())
-
 					url, err := gcsClient.URL(versionedBucketName, filepath.Join(directoryPrefix, "version"), generation2)
 					Expect(err).ToNot(HaveOccurred())
 
@@ -826,7 +825,7 @@ var _ = Describe("in", func() {
 				})
 
 				It("returns an error", func() {
-					Expect(session.Err).To(gbytes.Say("error running command: googleapi:"))
+					Expect(session.Err).To(gbytes.Say("error running command: storage: object doesn't exist"))
 				})
 			})
 
@@ -927,7 +926,7 @@ var _ = Describe("in", func() {
 				})
 
 				It("returns an error", func() {
-					Expect(session.Err).To(gbytes.Say("error running command: googleapi:"))
+					Expect(session.Err).To(gbytes.Say("error running command: storage: object doesn't exist"))
 				})
 			})
 		})

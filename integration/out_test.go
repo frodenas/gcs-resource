@@ -115,23 +115,25 @@ var _ = Describe("out", func() {
 			})
 		})
 
-		Context("when the content type is incorrect", func() {
-			BeforeEach(func() {
-				outRequest.Source.Regexp = "file-to-*"
-				outRequest.Params.File = "file-to-*"
-				outRequest.Params.ContentType = "wrong-type"
-
-				err = ioutil.WriteFile(filepath.Join(sourceDir, "file-to-upload"), []byte("contents"), 0755)
-				Expect(err).ToNot(HaveOccurred())
-
-				err := json.NewEncoder(stdin).Encode(outRequest)
-				Expect(err).ToNot(HaveOccurred())
-			})
-
-			It("returns an error", func() {
-				Expect(session.Err).To(gbytes.Say("Media type 'wrong-type' is not supported"))
-			})
-		})
+		//04/03/2020 It appears the new Google Storage API no longer validates the content type
+		//so I'm removing this test as there is no easy way to validate these
+		//Context("when the content type is incorrect", func() {
+		//	BeforeEach(func() {
+		//		outRequest.Source.Regexp = "file-to-*"
+		//		outRequest.Params.File = "file-to-*"
+		//		outRequest.Params.ContentType = "wrong-type"
+		//
+		//		err = ioutil.WriteFile(filepath.Join(sourceDir, "file-to-upload"), []byte("contents"), 0755)
+		//		Expect(err).ToNot(HaveOccurred())
+		//
+		//		err := json.NewEncoder(stdin).Encode(outRequest)
+		//		Expect(err).ToNot(HaveOccurred())
+		//	})
+		//
+		//	FIt("returns an error", func() {
+		//		Expect(session.Err).To(gbytes.Say("Media type 'wrong-type' is not supported"))
+		//	})
+		//})
 	})
 
 	Describe("when finding the local file to upload", func() {
@@ -328,7 +330,7 @@ var _ = Describe("out", func() {
 			})
 
 			It("returns an error", func() {
-				Expect(session.Err).To(gbytes.Say("error running command: googleapi:"))
+				Expect(session.Err).To(gbytes.Say("error running command: storage: bucket doesn't exist"))
 			})
 		})
 	})
@@ -478,7 +480,7 @@ var _ = Describe("out", func() {
 			})
 
 			It("returns an error", func() {
-				Expect(session.Err).To(gbytes.Say("error running command: googleapi:"))
+				Expect(session.Err).To(gbytes.Say("error running command: storage: bucket doesn't exist"))
 			})
 		})
 	})
@@ -498,12 +500,12 @@ var _ = Describe("out", func() {
 
 			// upload the .pivotal file
 			filePath = filepath.Join(sourceDir, "file-to-upload")
-			tarballName = "output-success.pivotal"
+			tarballName = "output-success.zip"
 
 			err = ioutil.WriteFile(filePath, []byte("contents"), 0755)
 			Expect(err).ToNot(HaveOccurred())
 
-			err = archiver.Zip.Make(filepath.Join(sourceDir, tarballName), []string{filePath})
+			err = archiver.Archive([]string{filePath}, filepath.Join(sourceDir, tarballName))
 			Expect(err).ToNot(HaveOccurred())
 		})
 

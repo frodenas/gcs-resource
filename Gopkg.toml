@@ -60,3 +60,7 @@
 [[constraint]]
   name = "github.com/h2non/filetype"
   version = "1.0.5"
+
+[[override]]
+  name = "gopkg.in/fsnotify.v1"
+  source = "https://github.com/fsnotify/fsnotify.git"
