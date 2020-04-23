@@ -4,16 +4,16 @@ package fakes
 import (
 	"sync"
 
-	"github.com/frodenas/gcs-resource"
-	storage "google.golang.org/api/storage/v1"
+	"cloud.google.com/go/storage"
+	gcsresource "github.com/frodenas/gcs-resource"
 )
 
 type FakeGCSClient struct {
-	BucketObjectsStub        func(bucketName string, prefix string) ([]string, error)
+	BucketObjectsStub        func(string, string) ([]string, error)
 	bucketObjectsMutex       sync.RWMutex
 	bucketObjectsArgsForCall []struct {
-		bucketName string
-		prefix     string
+		arg1 string
+		arg2 string
 	}
 	bucketObjectsReturns struct {
 		result1 []string
@@ -23,11 +23,52 @@ type FakeGCSClient struct {
 		result1 []string
 		result2 error
 	}
-	ObjectGenerationsStub        func(bucketName string, objectPath string) ([]int64, error)
+	DeleteObjectStub        func(string, string, int64) error
+	deleteObjectMutex       sync.RWMutex
+	deleteObjectArgsForCall []struct {
+		arg1 string
+		arg2 string
+		arg3 int64
+	}
+	deleteObjectReturns struct {
+		result1 error
+	}
+	deleteObjectReturnsOnCall map[int]struct {
+		result1 error
+	}
+	DownloadFileStub        func(string, string, int64, string) error
+	downloadFileMutex       sync.RWMutex
+	downloadFileArgsForCall []struct {
+		arg1 string
+		arg2 string
+		arg3 int64
+		arg4 string
+	}
+	downloadFileReturns struct {
+		result1 error
+	}
+	downloadFileReturnsOnCall map[int]struct {
+		result1 error
+	}
+	GetBucketObjectInfoStub        func(string, string) (*storage.ObjectAttrs, error)
+	getBucketObjectInfoMutex       sync.RWMutex
+	getBucketObjectInfoArgsForCall []struct {
+		arg1 string
+		arg2 string
+	}
+	getBucketObjectInfoReturns struct {
+		result1 *storage.ObjectAttrs
+		result2 error
+	}
+	getBucketObjectInfoReturnsOnCall map[int]struct {
+		result1 *storage.ObjectAttrs
+		result2 error
+	}
+	ObjectGenerationsStub        func(string, string) ([]int64, error)
 	objectGenerationsMutex       sync.RWMutex
 	objectGenerationsArgsForCall []struct {
-		bucketName string
-		objectPath string
+		arg1 string
+		arg2 string
 	}
 	objectGenerationsReturns struct {
 		result1 []int64
@@ -37,44 +78,12 @@ type FakeGCSClient struct {
 		result1 []int64
 		result2 error
 	}
-	DownloadFileStub        func(bucketName string, objectPath string, generation int64, localPath string) error
-	downloadFileMutex       sync.RWMutex
-	downloadFileArgsForCall []struct {
-		bucketName string
-		objectPath string
-		generation int64
-		localPath  string
-	}
-	downloadFileReturns struct {
-		result1 error
-	}
-	downloadFileReturnsOnCall map[int]struct {
-		result1 error
-	}
-	UploadFileStub        func(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, cacheControl string) (int64, error)
-	uploadFileMutex       sync.RWMutex
-	uploadFileArgsForCall []struct {
-		bucketName        string
-		objectPath        string
-		objectContentType string
-		localPath         string
-		predefinedACL     string
-		cacheControl      string
-	}
-	uploadFileReturns struct {
-		result1 int64
-		result2 error
-	}
-	uploadFileReturnsOnCall map[int]struct {
-		result1 int64
-		result2 error
-	}
-	URLStub        func(bucketName string, objectPath string, generation int64) (string, error)
+	URLStub        func(string, string, int64) (string, error)
 	uRLMutex       sync.RWMutex
 	uRLArgsForCall []struct {
-		bucketName string
-		objectPath string
-		generation int64
+		arg1 string
+		arg2 string
+		arg3 int64
 	}
 	uRLReturns struct {
 		result1 string
@@ -84,53 +93,45 @@ type FakeGCSClient struct {
 		result1 string
 		result2 error
 	}
-	DeleteObjectStub        func(bucketName string, objectPath string, generation int64) error
-	deleteObjectMutex       sync.RWMutex
-	deleteObjectArgsForCall []struct {
-		bucketName string
-		objectPath string
-		generation int64
+	UploadFileStub        func(string, string, string, string, string, string) (int64, error)
+	uploadFileMutex       sync.RWMutex
+	uploadFileArgsForCall []struct {
+		arg1 string
+		arg2 string
+		arg3 string
+		arg4 string
+		arg5 string
+		arg6 string
 	}
-	deleteObjectReturns struct {
-		result1 error
-	}
-	deleteObjectReturnsOnCall map[int]struct {
-		result1 error
-	}
-	GetBucketObjectInfoStub        func(bucketName, objectPath string) (*storage.Object, error)
-	getBucketObjectInfoMutex       sync.RWMutex
-	getBucketObjectInfoArgsForCall []struct {
-		bucketName string
-		objectPath string
-	}
-	getBucketObjectInfoReturns struct {
-		result1 *storage.Object
+	uploadFileReturns struct {
+		result1 int64
 		result2 error
 	}
-	getBucketObjectInfoReturnsOnCall map[int]struct {
-		result1 *storage.Object
+	uploadFileReturnsOnCall map[int]struct {
+		result1 int64
 		result2 error
 	}
 	invocations      map[string][][]interface{}
 	invocationsMutex sync.RWMutex
 }
 
-func (fake *FakeGCSClient) BucketObjects(bucketName string, prefix string) ([]string, error) {
+func (fake *FakeGCSClient) BucketObjects(arg1 string, arg2 string) ([]string, error) {
 	fake.bucketObjectsMutex.Lock()
 	ret, specificReturn := fake.bucketObjectsReturnsOnCall[len(fake.bucketObjectsArgsForCall)]
 	fake.bucketObjectsArgsForCall = append(fake.bucketObjectsArgsForCall, struct {
-		bucketName string
-		prefix     string
-	}{bucketName, prefix})
-	fake.recordInvocation("BucketObjects", []interface{}{bucketName, prefix})
+		arg1 string
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("BucketObjects", []interface{}{arg1, arg2})
 	fake.bucketObjectsMutex.Unlock()
 	if fake.BucketObjectsStub != nil {
-		return fake.BucketObjectsStub(bucketName, prefix)
+		return fake.BucketObjectsStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.bucketObjectsReturns.result1, fake.bucketObjectsReturns.result2
+	fakeReturns := fake.bucketObjectsReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeGCSClient) BucketObjectsCallCount() int {
@@ -139,13 +140,22 @@ func (fake *FakeGCSClient) BucketObjectsCallCount() int {
 	return len(fake.bucketObjectsArgsForCall)
 }
 
+func (fake *FakeGCSClient) BucketObjectsCalls(stub func(string, string) ([]string, error)) {
+	fake.bucketObjectsMutex.Lock()
+	defer fake.bucketObjectsMutex.Unlock()
+	fake.BucketObjectsStub = stub
+}
+
 func (fake *FakeGCSClient) BucketObjectsArgsForCall(i int) (string, string) {
 	fake.bucketObjectsMutex.RLock()
 	defer fake.bucketObjectsMutex.RUnlock()
-	return fake.bucketObjectsArgsForCall[i].bucketName, fake.bucketObjectsArgsForCall[i].prefix
+	argsForCall := fake.bucketObjectsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeGCSClient) BucketObjectsReturns(result1 []string, result2 error) {
+	fake.bucketObjectsMutex.Lock()
+	defer fake.bucketObjectsMutex.Unlock()
 	fake.BucketObjectsStub = nil
 	fake.bucketObjectsReturns = struct {
 		result1 []string
@@ -154,6 +164,8 @@ func (fake *FakeGCSClient) BucketObjectsReturns(result1 []string, result2 error)
 }
 
 func (fake *FakeGCSClient) BucketObjectsReturnsOnCall(i int, result1 []string, result2 error) {
+	fake.bucketObjectsMutex.Lock()
+	defer fake.bucketObjectsMutex.Unlock()
 	fake.BucketObjectsStub = nil
 	if fake.bucketObjectsReturnsOnCall == nil {
 		fake.bucketObjectsReturnsOnCall = make(map[int]struct {
@@ -167,22 +179,212 @@ func (fake *FakeGCSClient) BucketObjectsReturnsOnCall(i int, result1 []string, r
 	}{result1, result2}
 }
 
-func (fake *FakeGCSClient) ObjectGenerations(bucketName string, objectPath string) ([]int64, error) {
-	fake.objectGenerationsMutex.Lock()
-	ret, specificReturn := fake.objectGenerationsReturnsOnCall[len(fake.objectGenerationsArgsForCall)]
-	fake.objectGenerationsArgsForCall = append(fake.objectGenerationsArgsForCall, struct {
-		bucketName string
-		objectPath string
-	}{bucketName, objectPath})
-	fake.recordInvocation("ObjectGenerations", []interface{}{bucketName, objectPath})
-	fake.objectGenerationsMutex.Unlock()
-	if fake.ObjectGenerationsStub != nil {
-		return fake.ObjectGenerationsStub(bucketName, objectPath)
+func (fake *FakeGCSClient) DeleteObject(arg1 string, arg2 string, arg3 int64) error {
+	fake.deleteObjectMutex.Lock()
+	ret, specificReturn := fake.deleteObjectReturnsOnCall[len(fake.deleteObjectArgsForCall)]
+	fake.deleteObjectArgsForCall = append(fake.deleteObjectArgsForCall, struct {
+		arg1 string
+		arg2 string
+		arg3 int64
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("DeleteObject", []interface{}{arg1, arg2, arg3})
+	fake.deleteObjectMutex.Unlock()
+	if fake.DeleteObjectStub != nil {
+		return fake.DeleteObjectStub(arg1, arg2, arg3)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.deleteObjectReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeGCSClient) DeleteObjectCallCount() int {
+	fake.deleteObjectMutex.RLock()
+	defer fake.deleteObjectMutex.RUnlock()
+	return len(fake.deleteObjectArgsForCall)
+}
+
+func (fake *FakeGCSClient) DeleteObjectCalls(stub func(string, string, int64) error) {
+	fake.deleteObjectMutex.Lock()
+	defer fake.deleteObjectMutex.Unlock()
+	fake.DeleteObjectStub = stub
+}
+
+func (fake *FakeGCSClient) DeleteObjectArgsForCall(i int) (string, string, int64) {
+	fake.deleteObjectMutex.RLock()
+	defer fake.deleteObjectMutex.RUnlock()
+	argsForCall := fake.deleteObjectArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
+}
+
+func (fake *FakeGCSClient) DeleteObjectReturns(result1 error) {
+	fake.deleteObjectMutex.Lock()
+	defer fake.deleteObjectMutex.Unlock()
+	fake.DeleteObjectStub = nil
+	fake.deleteObjectReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeGCSClient) DeleteObjectReturnsOnCall(i int, result1 error) {
+	fake.deleteObjectMutex.Lock()
+	defer fake.deleteObjectMutex.Unlock()
+	fake.DeleteObjectStub = nil
+	if fake.deleteObjectReturnsOnCall == nil {
+		fake.deleteObjectReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.deleteObjectReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeGCSClient) DownloadFile(arg1 string, arg2 string, arg3 int64, arg4 string) error {
+	fake.downloadFileMutex.Lock()
+	ret, specificReturn := fake.downloadFileReturnsOnCall[len(fake.downloadFileArgsForCall)]
+	fake.downloadFileArgsForCall = append(fake.downloadFileArgsForCall, struct {
+		arg1 string
+		arg2 string
+		arg3 int64
+		arg4 string
+	}{arg1, arg2, arg3, arg4})
+	fake.recordInvocation("DownloadFile", []interface{}{arg1, arg2, arg3, arg4})
+	fake.downloadFileMutex.Unlock()
+	if fake.DownloadFileStub != nil {
+		return fake.DownloadFileStub(arg1, arg2, arg3, arg4)
+	}
+	if specificReturn {
+		return ret.result1
+	}
+	fakeReturns := fake.downloadFileReturns
+	return fakeReturns.result1
+}
+
+func (fake *FakeGCSClient) DownloadFileCallCount() int {
+	fake.downloadFileMutex.RLock()
+	defer fake.downloadFileMutex.RUnlock()
+	return len(fake.downloadFileArgsForCall)
+}
+
+func (fake *FakeGCSClient) DownloadFileCalls(stub func(string, string, int64, string) error) {
+	fake.downloadFileMutex.Lock()
+	defer fake.downloadFileMutex.Unlock()
+	fake.DownloadFileStub = stub
+}
+
+func (fake *FakeGCSClient) DownloadFileArgsForCall(i int) (string, string, int64, string) {
+	fake.downloadFileMutex.RLock()
+	defer fake.downloadFileMutex.RUnlock()
+	argsForCall := fake.downloadFileArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4
+}
+
+func (fake *FakeGCSClient) DownloadFileReturns(result1 error) {
+	fake.downloadFileMutex.Lock()
+	defer fake.downloadFileMutex.Unlock()
+	fake.DownloadFileStub = nil
+	fake.downloadFileReturns = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeGCSClient) DownloadFileReturnsOnCall(i int, result1 error) {
+	fake.downloadFileMutex.Lock()
+	defer fake.downloadFileMutex.Unlock()
+	fake.DownloadFileStub = nil
+	if fake.downloadFileReturnsOnCall == nil {
+		fake.downloadFileReturnsOnCall = make(map[int]struct {
+			result1 error
+		})
+	}
+	fake.downloadFileReturnsOnCall[i] = struct {
+		result1 error
+	}{result1}
+}
+
+func (fake *FakeGCSClient) GetBucketObjectInfo(arg1 string, arg2 string) (*storage.ObjectAttrs, error) {
+	fake.getBucketObjectInfoMutex.Lock()
+	ret, specificReturn := fake.getBucketObjectInfoReturnsOnCall[len(fake.getBucketObjectInfoArgsForCall)]
+	fake.getBucketObjectInfoArgsForCall = append(fake.getBucketObjectInfoArgsForCall, struct {
+		arg1 string
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("GetBucketObjectInfo", []interface{}{arg1, arg2})
+	fake.getBucketObjectInfoMutex.Unlock()
+	if fake.GetBucketObjectInfoStub != nil {
+		return fake.GetBucketObjectInfoStub(arg1, arg2)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.objectGenerationsReturns.result1, fake.objectGenerationsReturns.result2
+	fakeReturns := fake.getBucketObjectInfoReturns
+	return fakeReturns.result1, fakeReturns.result2
+}
+
+func (fake *FakeGCSClient) GetBucketObjectInfoCallCount() int {
+	fake.getBucketObjectInfoMutex.RLock()
+	defer fake.getBucketObjectInfoMutex.RUnlock()
+	return len(fake.getBucketObjectInfoArgsForCall)
+}
+
+func (fake *FakeGCSClient) GetBucketObjectInfoCalls(stub func(string, string) (*storage.ObjectAttrs, error)) {
+	fake.getBucketObjectInfoMutex.Lock()
+	defer fake.getBucketObjectInfoMutex.Unlock()
+	fake.GetBucketObjectInfoStub = stub
+}
+
+func (fake *FakeGCSClient) GetBucketObjectInfoArgsForCall(i int) (string, string) {
+	fake.getBucketObjectInfoMutex.RLock()
+	defer fake.getBucketObjectInfoMutex.RUnlock()
+	argsForCall := fake.getBucketObjectInfoArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
+}
+
+func (fake *FakeGCSClient) GetBucketObjectInfoReturns(result1 *storage.ObjectAttrs, result2 error) {
+	fake.getBucketObjectInfoMutex.Lock()
+	defer fake.getBucketObjectInfoMutex.Unlock()
+	fake.GetBucketObjectInfoStub = nil
+	fake.getBucketObjectInfoReturns = struct {
+		result1 *storage.ObjectAttrs
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeGCSClient) GetBucketObjectInfoReturnsOnCall(i int, result1 *storage.ObjectAttrs, result2 error) {
+	fake.getBucketObjectInfoMutex.Lock()
+	defer fake.getBucketObjectInfoMutex.Unlock()
+	fake.GetBucketObjectInfoStub = nil
+	if fake.getBucketObjectInfoReturnsOnCall == nil {
+		fake.getBucketObjectInfoReturnsOnCall = make(map[int]struct {
+			result1 *storage.ObjectAttrs
+			result2 error
+		})
+	}
+	fake.getBucketObjectInfoReturnsOnCall[i] = struct {
+		result1 *storage.ObjectAttrs
+		result2 error
+	}{result1, result2}
+}
+
+func (fake *FakeGCSClient) ObjectGenerations(arg1 string, arg2 string) ([]int64, error) {
+	fake.objectGenerationsMutex.Lock()
+	ret, specificReturn := fake.objectGenerationsReturnsOnCall[len(fake.objectGenerationsArgsForCall)]
+	fake.objectGenerationsArgsForCall = append(fake.objectGenerationsArgsForCall, struct {
+		arg1 string
+		arg2 string
+	}{arg1, arg2})
+	fake.recordInvocation("ObjectGenerations", []interface{}{arg1, arg2})
+	fake.objectGenerationsMutex.Unlock()
+	if fake.ObjectGenerationsStub != nil {
+		return fake.ObjectGenerationsStub(arg1, arg2)
+	}
+	if specificReturn {
+		return ret.result1, ret.result2
+	}
+	fakeReturns := fake.objectGenerationsReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeGCSClient) ObjectGenerationsCallCount() int {
@@ -191,13 +393,22 @@ func (fake *FakeGCSClient) ObjectGenerationsCallCount() int {
 	return len(fake.objectGenerationsArgsForCall)
 }
 
+func (fake *FakeGCSClient) ObjectGenerationsCalls(stub func(string, string) ([]int64, error)) {
+	fake.objectGenerationsMutex.Lock()
+	defer fake.objectGenerationsMutex.Unlock()
+	fake.ObjectGenerationsStub = stub
+}
+
 func (fake *FakeGCSClient) ObjectGenerationsArgsForCall(i int) (string, string) {
 	fake.objectGenerationsMutex.RLock()
 	defer fake.objectGenerationsMutex.RUnlock()
-	return fake.objectGenerationsArgsForCall[i].bucketName, fake.objectGenerationsArgsForCall[i].objectPath
+	argsForCall := fake.objectGenerationsArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2
 }
 
 func (fake *FakeGCSClient) ObjectGenerationsReturns(result1 []int64, result2 error) {
+	fake.objectGenerationsMutex.Lock()
+	defer fake.objectGenerationsMutex.Unlock()
 	fake.ObjectGenerationsStub = nil
 	fake.objectGenerationsReturns = struct {
 		result1 []int64
@@ -206,6 +417,8 @@ func (fake *FakeGCSClient) ObjectGenerationsReturns(result1 []int64, result2 err
 }
 
 func (fake *FakeGCSClient) ObjectGenerationsReturnsOnCall(i int, result1 []int64, result2 error) {
+	fake.objectGenerationsMutex.Lock()
+	defer fake.objectGenerationsMutex.Unlock()
 	fake.ObjectGenerationsStub = nil
 	if fake.objectGenerationsReturnsOnCall == nil {
 		fake.objectGenerationsReturnsOnCall = make(map[int]struct {
@@ -219,130 +432,24 @@ func (fake *FakeGCSClient) ObjectGenerationsReturnsOnCall(i int, result1 []int64
 	}{result1, result2}
 }
 
-func (fake *FakeGCSClient) DownloadFile(bucketName string, objectPath string, generation int64, localPath string) error {
-	fake.downloadFileMutex.Lock()
-	ret, specificReturn := fake.downloadFileReturnsOnCall[len(fake.downloadFileArgsForCall)]
-	fake.downloadFileArgsForCall = append(fake.downloadFileArgsForCall, struct {
-		bucketName string
-		objectPath string
-		generation int64
-		localPath  string
-	}{bucketName, objectPath, generation, localPath})
-	fake.recordInvocation("DownloadFile", []interface{}{bucketName, objectPath, generation, localPath})
-	fake.downloadFileMutex.Unlock()
-	if fake.DownloadFileStub != nil {
-		return fake.DownloadFileStub(bucketName, objectPath, generation, localPath)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.downloadFileReturns.result1
-}
-
-func (fake *FakeGCSClient) DownloadFileCallCount() int {
-	fake.downloadFileMutex.RLock()
-	defer fake.downloadFileMutex.RUnlock()
-	return len(fake.downloadFileArgsForCall)
-}
-
-func (fake *FakeGCSClient) DownloadFileArgsForCall(i int) (string, string, int64, string) {
-	fake.downloadFileMutex.RLock()
-	defer fake.downloadFileMutex.RUnlock()
-	return fake.downloadFileArgsForCall[i].bucketName, fake.downloadFileArgsForCall[i].objectPath, fake.downloadFileArgsForCall[i].generation, fake.downloadFileArgsForCall[i].localPath
-}
-
-func (fake *FakeGCSClient) DownloadFileReturns(result1 error) {
-	fake.DownloadFileStub = nil
-	fake.downloadFileReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeGCSClient) DownloadFileReturnsOnCall(i int, result1 error) {
-	fake.DownloadFileStub = nil
-	if fake.downloadFileReturnsOnCall == nil {
-		fake.downloadFileReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.downloadFileReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeGCSClient) UploadFile(bucketName string, objectPath string, objectContentType string, localPath string, predefinedACL string, cacheControl string) (int64, error) {
-	fake.uploadFileMutex.Lock()
-	ret, specificReturn := fake.uploadFileReturnsOnCall[len(fake.uploadFileArgsForCall)]
-	fake.uploadFileArgsForCall = append(fake.uploadFileArgsForCall, struct {
-		bucketName        string
-		objectPath        string
-		objectContentType string
-		localPath         string
-		predefinedACL     string
-		cacheControl      string
-	}{bucketName, objectPath, objectContentType, localPath, predefinedACL, cacheControl})
-	fake.recordInvocation("UploadFile", []interface{}{bucketName, objectPath, objectContentType, localPath, predefinedACL, cacheControl})
-	fake.uploadFileMutex.Unlock()
-	if fake.UploadFileStub != nil {
-		return fake.UploadFileStub(bucketName, objectPath, objectContentType, localPath, predefinedACL, cacheControl)
-	}
-	if specificReturn {
-		return ret.result1, ret.result2
-	}
-	return fake.uploadFileReturns.result1, fake.uploadFileReturns.result2
-}
-
-func (fake *FakeGCSClient) UploadFileCallCount() int {
-	fake.uploadFileMutex.RLock()
-	defer fake.uploadFileMutex.RUnlock()
-	return len(fake.uploadFileArgsForCall)
-}
-
-func (fake *FakeGCSClient) UploadFileArgsForCall(i int) (string, string, string, string, string, string) {
-	fake.uploadFileMutex.RLock()
-	defer fake.uploadFileMutex.RUnlock()
-	return fake.uploadFileArgsForCall[i].bucketName, fake.uploadFileArgsForCall[i].objectPath, fake.uploadFileArgsForCall[i].objectContentType, fake.uploadFileArgsForCall[i].localPath, fake.uploadFileArgsForCall[i].predefinedACL, fake.uploadFileArgsForCall[i].cacheControl
-}
-
-func (fake *FakeGCSClient) UploadFileReturns(result1 int64, result2 error) {
-	fake.UploadFileStub = nil
-	fake.uploadFileReturns = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeGCSClient) UploadFileReturnsOnCall(i int, result1 int64, result2 error) {
-	fake.UploadFileStub = nil
-	if fake.uploadFileReturnsOnCall == nil {
-		fake.uploadFileReturnsOnCall = make(map[int]struct {
-			result1 int64
-			result2 error
-		})
-	}
-	fake.uploadFileReturnsOnCall[i] = struct {
-		result1 int64
-		result2 error
-	}{result1, result2}
-}
-
-func (fake *FakeGCSClient) URL(bucketName string, objectPath string, generation int64) (string, error) {
+func (fake *FakeGCSClient) URL(arg1 string, arg2 string, arg3 int64) (string, error) {
 	fake.uRLMutex.Lock()
 	ret, specificReturn := fake.uRLReturnsOnCall[len(fake.uRLArgsForCall)]
 	fake.uRLArgsForCall = append(fake.uRLArgsForCall, struct {
-		bucketName string
-		objectPath string
-		generation int64
-	}{bucketName, objectPath, generation})
-	fake.recordInvocation("URL", []interface{}{bucketName, objectPath, generation})
+		arg1 string
+		arg2 string
+		arg3 int64
+	}{arg1, arg2, arg3})
+	fake.recordInvocation("URL", []interface{}{arg1, arg2, arg3})
 	fake.uRLMutex.Unlock()
 	if fake.URLStub != nil {
-		return fake.URLStub(bucketName, objectPath, generation)
+		return fake.URLStub(arg1, arg2, arg3)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.uRLReturns.result1, fake.uRLReturns.result2
+	fakeReturns := fake.uRLReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
 func (fake *FakeGCSClient) URLCallCount() int {
@@ -351,13 +458,22 @@ func (fake *FakeGCSClient) URLCallCount() int {
 	return len(fake.uRLArgsForCall)
 }
 
+func (fake *FakeGCSClient) URLCalls(stub func(string, string, int64) (string, error)) {
+	fake.uRLMutex.Lock()
+	defer fake.uRLMutex.Unlock()
+	fake.URLStub = stub
+}
+
 func (fake *FakeGCSClient) URLArgsForCall(i int) (string, string, int64) {
 	fake.uRLMutex.RLock()
 	defer fake.uRLMutex.RUnlock()
-	return fake.uRLArgsForCall[i].bucketName, fake.uRLArgsForCall[i].objectPath, fake.uRLArgsForCall[i].generation
+	argsForCall := fake.uRLArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3
 }
 
 func (fake *FakeGCSClient) URLReturns(result1 string, result2 error) {
+	fake.uRLMutex.Lock()
+	defer fake.uRLMutex.Unlock()
 	fake.URLStub = nil
 	fake.uRLReturns = struct {
 		result1 string
@@ -366,6 +482,8 @@ func (fake *FakeGCSClient) URLReturns(result1 string, result2 error) {
 }
 
 func (fake *FakeGCSClient) URLReturnsOnCall(i int, result1 string, result2 error) {
+	fake.uRLMutex.Lock()
+	defer fake.uRLMutex.Unlock()
 	fake.URLStub = nil
 	if fake.uRLReturnsOnCall == nil {
 		fake.uRLReturnsOnCall = make(map[int]struct {
@@ -379,104 +497,70 @@ func (fake *FakeGCSClient) URLReturnsOnCall(i int, result1 string, result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGCSClient) DeleteObject(bucketName string, objectPath string, generation int64) error {
-	fake.deleteObjectMutex.Lock()
-	ret, specificReturn := fake.deleteObjectReturnsOnCall[len(fake.deleteObjectArgsForCall)]
-	fake.deleteObjectArgsForCall = append(fake.deleteObjectArgsForCall, struct {
-		bucketName string
-		objectPath string
-		generation int64
-	}{bucketName, objectPath, generation})
-	fake.recordInvocation("DeleteObject", []interface{}{bucketName, objectPath, generation})
-	fake.deleteObjectMutex.Unlock()
-	if fake.DeleteObjectStub != nil {
-		return fake.DeleteObjectStub(bucketName, objectPath, generation)
-	}
-	if specificReturn {
-		return ret.result1
-	}
-	return fake.deleteObjectReturns.result1
-}
-
-func (fake *FakeGCSClient) DeleteObjectCallCount() int {
-	fake.deleteObjectMutex.RLock()
-	defer fake.deleteObjectMutex.RUnlock()
-	return len(fake.deleteObjectArgsForCall)
-}
-
-func (fake *FakeGCSClient) DeleteObjectArgsForCall(i int) (string, string, int64) {
-	fake.deleteObjectMutex.RLock()
-	defer fake.deleteObjectMutex.RUnlock()
-	return fake.deleteObjectArgsForCall[i].bucketName, fake.deleteObjectArgsForCall[i].objectPath, fake.deleteObjectArgsForCall[i].generation
-}
-
-func (fake *FakeGCSClient) DeleteObjectReturns(result1 error) {
-	fake.DeleteObjectStub = nil
-	fake.deleteObjectReturns = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeGCSClient) DeleteObjectReturnsOnCall(i int, result1 error) {
-	fake.DeleteObjectStub = nil
-	if fake.deleteObjectReturnsOnCall == nil {
-		fake.deleteObjectReturnsOnCall = make(map[int]struct {
-			result1 error
-		})
-	}
-	fake.deleteObjectReturnsOnCall[i] = struct {
-		result1 error
-	}{result1}
-}
-
-func (fake *FakeGCSClient) GetBucketObjectInfo(bucketName string, objectPath string) (*storage.Object, error) {
-	fake.getBucketObjectInfoMutex.Lock()
-	ret, specificReturn := fake.getBucketObjectInfoReturnsOnCall[len(fake.getBucketObjectInfoArgsForCall)]
-	fake.getBucketObjectInfoArgsForCall = append(fake.getBucketObjectInfoArgsForCall, struct {
-		bucketName string
-		objectPath string
-	}{bucketName, objectPath})
-	fake.recordInvocation("GetBucketObjectInfo", []interface{}{bucketName, objectPath})
-	fake.getBucketObjectInfoMutex.Unlock()
-	if fake.GetBucketObjectInfoStub != nil {
-		return fake.GetBucketObjectInfoStub(bucketName, objectPath)
+func (fake *FakeGCSClient) UploadFile(arg1 string, arg2 string, arg3 string, arg4 string, arg5 string, arg6 string) (int64, error) {
+	fake.uploadFileMutex.Lock()
+	ret, specificReturn := fake.uploadFileReturnsOnCall[len(fake.uploadFileArgsForCall)]
+	fake.uploadFileArgsForCall = append(fake.uploadFileArgsForCall, struct {
+		arg1 string
+		arg2 string
+		arg3 string
+		arg4 string
+		arg5 string
+		arg6 string
+	}{arg1, arg2, arg3, arg4, arg5, arg6})
+	fake.recordInvocation("UploadFile", []interface{}{arg1, arg2, arg3, arg4, arg5, arg6})
+	fake.uploadFileMutex.Unlock()
+	if fake.UploadFileStub != nil {
+		return fake.UploadFileStub(arg1, arg2, arg3, arg4, arg5, arg6)
 	}
 	if specificReturn {
 		return ret.result1, ret.result2
 	}
-	return fake.getBucketObjectInfoReturns.result1, fake.getBucketObjectInfoReturns.result2
+	fakeReturns := fake.uploadFileReturns
+	return fakeReturns.result1, fakeReturns.result2
 }
 
-func (fake *FakeGCSClient) GetBucketObjectInfoCallCount() int {
-	fake.getBucketObjectInfoMutex.RLock()
-	defer fake.getBucketObjectInfoMutex.RUnlock()
-	return len(fake.getBucketObjectInfoArgsForCall)
+func (fake *FakeGCSClient) UploadFileCallCount() int {
+	fake.uploadFileMutex.RLock()
+	defer fake.uploadFileMutex.RUnlock()
+	return len(fake.uploadFileArgsForCall)
 }
 
-func (fake *FakeGCSClient) GetBucketObjectInfoArgsForCall(i int) (string, string) {
-	fake.getBucketObjectInfoMutex.RLock()
-	defer fake.getBucketObjectInfoMutex.RUnlock()
-	return fake.getBucketObjectInfoArgsForCall[i].bucketName, fake.getBucketObjectInfoArgsForCall[i].objectPath
+func (fake *FakeGCSClient) UploadFileCalls(stub func(string, string, string, string, string, string) (int64, error)) {
+	fake.uploadFileMutex.Lock()
+	defer fake.uploadFileMutex.Unlock()
+	fake.UploadFileStub = stub
 }
 
-func (fake *FakeGCSClient) GetBucketObjectInfoReturns(result1 *storage.Object, result2 error) {
-	fake.GetBucketObjectInfoStub = nil
-	fake.getBucketObjectInfoReturns = struct {
-		result1 *storage.Object
+func (fake *FakeGCSClient) UploadFileArgsForCall(i int) (string, string, string, string, string, string) {
+	fake.uploadFileMutex.RLock()
+	defer fake.uploadFileMutex.RUnlock()
+	argsForCall := fake.uploadFileArgsForCall[i]
+	return argsForCall.arg1, argsForCall.arg2, argsForCall.arg3, argsForCall.arg4, argsForCall.arg5, argsForCall.arg6
+}
+
+func (fake *FakeGCSClient) UploadFileReturns(result1 int64, result2 error) {
+	fake.uploadFileMutex.Lock()
+	defer fake.uploadFileMutex.Unlock()
+	fake.UploadFileStub = nil
+	fake.uploadFileReturns = struct {
+		result1 int64
 		result2 error
 	}{result1, result2}
 }
 
-func (fake *FakeGCSClient) GetBucketObjectInfoReturnsOnCall(i int, result1 *storage.Object, result2 error) {
-	fake.GetBucketObjectInfoStub = nil
-	if fake.getBucketObjectInfoReturnsOnCall == nil {
-		fake.getBucketObjectInfoReturnsOnCall = make(map[int]struct {
-			result1 *storage.Object
+func (fake *FakeGCSClient) UploadFileReturnsOnCall(i int, result1 int64, result2 error) {
+	fake.uploadFileMutex.Lock()
+	defer fake.uploadFileMutex.Unlock()
+	fake.UploadFileStub = nil
+	if fake.uploadFileReturnsOnCall == nil {
+		fake.uploadFileReturnsOnCall = make(map[int]struct {
+			result1 int64
 			result2 error
 		})
 	}
-	fake.getBucketObjectInfoReturnsOnCall[i] = struct {
-		result1 *storage.Object
+	fake.uploadFileReturnsOnCall[i] = struct {
+		result1 int64
 		result2 error
 	}{result1, result2}
 }
@@ -486,18 +570,18 @@ func (fake *FakeGCSClient) Invocations() map[string][][]interface{} {
 	defer fake.invocationsMutex.RUnlock()
 	fake.bucketObjectsMutex.RLock()
 	defer fake.bucketObjectsMutex.RUnlock()
-	fake.objectGenerationsMutex.RLock()
-	defer fake.objectGenerationsMutex.RUnlock()
-	fake.downloadFileMutex.RLock()
-	defer fake.downloadFileMutex.RUnlock()
-	fake.uploadFileMutex.RLock()
-	defer fake.uploadFileMutex.RUnlock()
-	fake.uRLMutex.RLock()
-	defer fake.uRLMutex.RUnlock()
 	fake.deleteObjectMutex.RLock()
 	defer fake.deleteObjectMutex.RUnlock()
+	fake.downloadFileMutex.RLock()
+	defer fake.downloadFileMutex.RUnlock()
 	fake.getBucketObjectInfoMutex.RLock()
 	defer fake.getBucketObjectInfoMutex.RUnlock()
+	fake.objectGenerationsMutex.RLock()
+	defer fake.objectGenerationsMutex.RUnlock()
+	fake.uRLMutex.RLock()
+	defer fake.uRLMutex.RUnlock()
+	fake.uploadFileMutex.RLock()
+	defer fake.uploadFileMutex.RUnlock()
 	copiedInvocations := map[string][][]interface{}{}
 	for key, value := range fake.invocations {
 		copiedInvocations[key] = value
