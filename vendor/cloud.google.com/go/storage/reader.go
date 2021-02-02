@@ -232,7 +232,7 @@ func (o *ObjectHandle) NewRangeReader(ctx context.Context, offset, length int64)
 		body = emptyBody
 	}
 	var metaGen int64
-	if res.Header.Get("X-Goog-Metageneration") != "" {
+	if res.Header.Get("X-Goog-Generation") != "" {
 		metaGen, err = strconv.ParseInt(res.Header.Get("X-Goog-Metageneration"), 10, 64)
 		if err != nil {
 			return nil, err

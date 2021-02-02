@@ -31,19 +31,24 @@ type gcsclient struct {
 func NewGCSClient(
 	progressOutput io.Writer,
 	jsonKey string,
+	apiKey string,
 ) (GCSClient, error) {
 	var err error
 	var userAgent = "gcs-resource/0.0.1"
 
 	var storageService *storage.Client
-	if jsonKey == "" {
-		ctx := context.Background()
+	ctx := context.Background()
+	if jsonKey == "" && apiKey == "" {
 		storageService, err = storage.NewClient(ctx, option.WithUserAgent(userAgent))
 		if err != nil {
 			return &gcsclient{}, err
 		}
+	} else if apiKey != "" {
+		storageService, err = storage.NewClient(ctx, option.WithAPIKey(apiKey))
+		if err != nil {
+			return &gcsclient{}, err
+		}
 	} else {
-		ctx := context.Background()
 		storageService, err = storage.NewClient(ctx, option.WithUserAgent(userAgent), option.WithCredentialsJSON([]byte(jsonKey)))
 		if err != nil {
 			return &gcsclient{}, err

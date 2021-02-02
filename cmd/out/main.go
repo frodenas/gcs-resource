@@ -22,6 +22,7 @@ func main() {
 	gcsClient, err := gcsresource.NewGCSClient(
 		os.Stderr,
 		request.Source.JSONKey,
+		request.Source.APIKey,
 	)
 	if err != nil {
 		gcsresource.Fatal("building GCS client", err)
