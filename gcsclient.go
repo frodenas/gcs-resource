@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"gopkg.in/cheggaaa/pb.v1"
@@ -44,7 +45,11 @@ func NewGCSClient(
 			return &gcsclient{}, err
 		}
 	} else if apiKey != "" {
-		storageService, err = storage.NewClient(ctx, option.WithAPIKey(apiKey))
+		t := &oauth2.Token{
+			AccessToken: apiKey,
+		}
+		tokenSource := oauth2.StaticTokenSource(t)
+		storageService, err = storage.NewClient(ctx, option.WithTokenSource(tokenSource))
 		if err != nil {
 			return &gcsclient{}, err
 		}
