@@ -32,24 +32,23 @@ type gcsclient struct {
 func NewGCSClient(
 	progressOutput io.Writer,
 	jsonKey string,
-	apiKey string,
+	accessToken string,
 ) (GCSClient, error) {
 	var err error
 	var userAgent = "gcs-resource/0.0.1"
 
 	var storageService *storage.Client
 	ctx := context.Background()
-	if jsonKey == "" && apiKey == "" {
+	if jsonKey == "" && accessToken == "" {
 		storageService, err = storage.NewClient(ctx, option.WithUserAgent(userAgent))
 		if err != nil {
 			return &gcsclient{}, err
 		}
-	} else if apiKey != "" {
+	} else if accessToken != "" {
 		t := &oauth2.Token{
-			AccessToken: apiKey,
+			AccessToken: accessToken,
 		}
-		tokenSource := oauth2.StaticTokenSource(t)
-		storageService, err = storage.NewClient(ctx, option.WithTokenSource(tokenSource))
+		storageService, err = storage.NewClient(ctx, option.WithTokenSource(oauth2.StaticTokenSource(t)))
 		if err != nil {
 			return &gcsclient{}, err
 		}

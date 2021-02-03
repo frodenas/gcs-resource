@@ -7,7 +7,7 @@ import (
 
 type Source struct {
 	JSONKey              string `json:"json_key"`
-	APIKey               string `json:"api_key"`
+	AccessToken          string `json:"access_token"`
 	Bucket               string `json:"bucket"`
 	Regexp               string `json:"regexp"`
 	VersionedFile        string `json:"versioned_file"`
