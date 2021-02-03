@@ -18,6 +18,7 @@ func TestIntegration(t *testing.T) {
 }
 
 var jsonKey = os.Getenv("GCS_RESOURCE_JSON_KEY")
+var accessToken = os.Getenv("GCS_RESOURCE_ACCESS_TOKEN")
 var bucketName = os.Getenv("GCS_RESOURCE_BUCKET_NAME")
 var versionedBucketName = os.Getenv("GCS_RESOURCE_VERSIONED_BUCKET_NAME")
 var gcsClient gcsresource.GCSClient
@@ -63,6 +64,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 	gcsClient, err = gcsresource.NewGCSClient(
 		ioutil.Discard,
 		jsonKey,
+		accessToken,
 	)
 	Expect(err).ToNot(HaveOccurred())
 })
