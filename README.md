@@ -8,7 +8,7 @@ This resource is based on the official [S3 resource][s3-resource].
 
 * `bucket` (*required*): the name of the bucket.
 
-* `json_key` (*required*): the contents of your GCS Account JSON Key file to use when accessing the bucket. Example:
+* `json_key` (*optional*): the contents of your GCS Account JSON Key file to use when accessing the bucket. Example:
   ```
   json_key: |
     {
@@ -19,6 +19,8 @@ This resource is based on the official [S3 resource][s3-resource].
       "type": "service_account"
     }
   ```
+
+* `access_token` (*optional*): google service account access token to use when accessing the bucket. (Useful when using hashicorp vault gcp secret backend)
 
 ### File Names
 

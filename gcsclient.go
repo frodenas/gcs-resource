@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"golang.org/x/oauth2"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 	"gopkg.in/cheggaaa/pb.v1"
@@ -31,19 +32,27 @@ type gcsclient struct {
 func NewGCSClient(
 	progressOutput io.Writer,
 	jsonKey string,
+	accessToken string,
 ) (GCSClient, error) {
 	var err error
 	var userAgent = "gcs-resource/0.0.1"
 
 	var storageService *storage.Client
-	if jsonKey == "" {
-		ctx := context.Background()
+	ctx := context.Background()
+	if jsonKey == "" && accessToken == "" {
 		storageService, err = storage.NewClient(ctx, option.WithUserAgent(userAgent))
 		if err != nil {
 			return &gcsclient{}, err
 		}
+	} else if accessToken != "" {
+		t := &oauth2.Token{
+			AccessToken: accessToken,
+		}
+		storageService, err = storage.NewClient(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(oauth2.StaticTokenSource(t)))
+		if err != nil {
+			return &gcsclient{}, err
+		}
 	} else {
-		ctx := context.Background()
 		storageService, err = storage.NewClient(ctx, option.WithUserAgent(userAgent), option.WithCredentialsJSON([]byte(jsonKey)))
 		if err != nil {
 			return &gcsclient{}, err
