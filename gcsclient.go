@@ -48,7 +48,7 @@ func NewGCSClient(
 		t := &oauth2.Token{
 			AccessToken: accessToken,
 		}
-		storageService, err = storage.NewClient(ctx, option.WithTokenSource(oauth2.StaticTokenSource(t)))
+		storageService, err = storage.NewClient(ctx, option.WithUserAgent(userAgent), option.WithTokenSource(oauth2.StaticTokenSource(t)))
 		if err != nil {
 			return &gcsclient{}, err
 		}
