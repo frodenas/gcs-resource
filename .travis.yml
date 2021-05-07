@@ -1,6 +1,9 @@
 sudo: required
+dist: focal
 
 language: go
+go:
+  - 1.12.6
 
 go_import_path: github.com/frodenas/gcs-resource
 
@@ -38,14 +41,9 @@ jobs:
               DOCKER_IMAGE_TAG=$TRAVIS_PULL_REQUEST_BRANCH
             fi
           fi
-        - make docker DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG
         - |
           if [[ "$TRAVIS_TAG" =~ ^v[0-9]+(\.[0-9]+){2}$ ]]; then
-            docker tag "$DOCKER_IMAGE_NAME:$TRAVIS_TAG" "$DOCKER_IMAGE_NAME:latest"
+             "$DOCKER_IMAGE_TAG"="latest"
           fi
-        - docker images
-        - |
-          if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
-            docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
-            docker push $DOCKER_IMAGE_NAME
-          fi
+        - docker login -u $DOCKER_LOGIN -p $DOCKER_PASSWORD
+        - make docker DOCKER_IMAGE_NAME=$DOCKER_IMAGE_NAME DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG 2>/dev/null
