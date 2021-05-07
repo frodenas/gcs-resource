@@ -1,4 +1,4 @@
-FROM golang:alpine as builder
+FROM golang:1.15.10-alpine as builder
 COPY . /go/src/github.com/frodenas/gcs-resource
 ENV CGO_ENABLED 0
 RUN go build -o /assets/in github.com/frodenas/gcs-resource/cmd/in
